@@ -41,6 +41,7 @@ setup(
         'thrift>=0.9.3',
         'thrift-sasl>=0.2.1',
         'werkzeug==0.11.10',
+        'Flask-CAS==1.0.0', # custom add
     ],
     extras_require={
         'cors': ['Flask-Cors>=2.0.0'],

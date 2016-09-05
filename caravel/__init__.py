@@ -66,3 +66,7 @@ sm = appbuilder.sm
 
 get_session = appbuilder.get_session
 from caravel import config, views  # noqa
+
+# add cas client support
+from flask.ext.cas import CAS
+cas = CAS(app, '/cas')
