@@ -10,6 +10,7 @@ let queryCount = 1;
 
 class QueryEditors extends React.Component {
   renameTab(qe) {
+    /* eslint no-alert: 0 */
     const newTitle = prompt('Enter a new title for the tab');
     if (newTitle) {
       this.props.actions.queryEditorSetTitle(qe, newTitle);
@@ -48,6 +49,7 @@ class QueryEditors extends React.Component {
   render() {
     const editors = this.props.queryEditors.map((qe, i) => {
       let latestQuery = this.props.queries[qe.latestQueryId];
+      const database = this.props.databases[qe.dbId];
       const state = (latestQuery) ? latestQuery.state : '';
       const tabTitle = (
         <div>
@@ -76,6 +78,7 @@ class QueryEditors extends React.Component {
               <SqlEditor
                 queryEditor={qe}
                 latestQuery={latestQuery}
+                database={database}
               />
             </div>
           </div>
@@ -95,6 +98,7 @@ class QueryEditors extends React.Component {
 }
 QueryEditors.propTypes = {
   actions: React.PropTypes.object,
+  databases: React.PropTypes.object,
   queries: React.PropTypes.object,
   queryEditors: React.PropTypes.array,
   tabHistory: React.PropTypes.array,
@@ -106,6 +110,7 @@ QueryEditors.defaultProps = {
 
 function mapStateToProps(state) {
   return {
+    databases: state.databases,
     queryEditors: state.queryEditors,
     queries: state.queries,
     tabHistory: state.tabHistory,

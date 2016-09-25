@@ -1,4 +1,4 @@
-from .security import CustomSecurityManager
+from security import CustomSecurityManager
 
 #---------------------------------------------------------
 # Caravel specific config
@@ -21,10 +21,25 @@ SECRET_KEY = '\2\1thisismyscretkey\1\2\e\y\y\h'
 # Note that the connection information to connect to the datasources
 # you want to explore are managed directly in the web UI
 #SQLALCHEMY_DATABASE_URI = 'sqlite:////tmp/caravel.db'
-SQLALCHEMY_DATABASE_URI = 'mysql://root:password@localhost/caravel'
+SQLALCHEMY_DATABASE_URI = 'mysql://caravel:password@localhost/caravel'
 
 # Flask-WTF flag for CSRF
 CSRF_ENABLED = True
+
+# Whether to run the web server in debug mode or not
+DEBUG = True
+
+# Whether to show the stacktrace on 500 error
+SHOW_STACKTRACE = True
+
+# ------------------------------
+# GLOBALS FOR APP Builder
+# ------------------------------
+# Uncomment to setup Your App name
+APP_NAME = "Caravel"
+
+# Uncomment to setup Setup an App icon
+APP_ICON = "/static/assets/images/caravel_logo.png"
 
 # ---------------------------------------------------
 # Babel config for translations
@@ -49,4 +64,21 @@ CAS_AFTER_LOGIN = 'CustomAuthDBView.cas'
 CAS_AFTER_LOGOUT_TEMP = 'CustomAuthDBView.cas_logout'
 
 
-CUSTOM_SECURITY_MANAGER = CustomSecurityManager
+# CUSTOM_SECURITY_MANAGER = CustomSecurityManager
+
+# Theme configuration
+# these are located on static/appbuilder/css/themes
+# you can create your own and easily use them placing them on the same dir structure to override
+APP_THEME = "bootstrap-theme.css"  # default bootstrap
+#APP_THEME = "cerulean.css"
+#APP_THEME = "amelia.css"
+#APP_THEME = "cosmo.css"
+#APP_THEME = "cyborg.css"
+#APP_THEME = "flatly.css"
+#APP_THEME = "journal.css"
+#APP_THEME = "readable.css"
+#APP_THEME = "simplex.css"
+#APP_THEME = "slate.css"
+#APP_THEME = "spacelab.css"
+#APP_THEME = "united.css"
+#APP_THEME = "yeti.css"

@@ -14,6 +14,7 @@ import random
 import pandas as pd
 from sqlalchemy import String, DateTime, Date, Float, BigInteger
 
+import caravel
 from caravel import app, db, models, utils
 
 # Shortcuts
@@ -25,18 +26,6 @@ Dash = models.Dashboard
 config = app.config
 
 DATA_FOLDER = os.path.join(config.get("BASE_DIR"), 'data')
-
-
-def get_or_create_db(session):
-    print("Creating database reference")
-    dbobj = session.query(DB).filter_by(database_name='main').first()
-    if not dbobj:
-        dbobj = DB(database_name="main")
-    print(config.get("SQLALCHEMY_DATABASE_URI"))
-    dbobj.sqlalchemy_uri = config.get("SQLALCHEMY_DATABASE_URI")
-    session.add(dbobj)
-    session.commit()
-    return dbobj
 
 
 def merge_slice(slc):
@@ -76,7 +65,7 @@ def load_energy():
         tbl = TBL(table_name=tbl_name)
     tbl.description = "Energy consumption"
     tbl.is_featured = True
-    tbl.database = get_or_create_db(db.session)
+    tbl.database = utils.get_or_create_main_db(caravel)
     db.session.merge(tbl)
     db.session.commit()
     tbl.fetch_metadata()
@@ -86,7 +75,7 @@ def load_energy():
             slice_name="Energy Sankey",
             viz_type='sankey',
             datasource_type='table',
-            table=tbl,
+            datasource_id=tbl.id,
             params=textwrap.dedent("""\
             {
                 "collapsed_fieldsets": "",
@@ -116,7 +105,7 @@ def load_energy():
             slice_name="Energy Force Layout",
             viz_type='directed_force',
             datasource_type='table',
-            table=tbl,
+            datasource_id=tbl.id,
             params=textwrap.dedent("""\
             {
                 "charge": "-500",
@@ -147,7 +136,7 @@ def load_energy():
             slice_name="Heatmap",
             viz_type='heatmap',
             datasource_type='table',
-            table=tbl,
+            datasource_id=tbl.id,
             params=textwrap.dedent("""\
             {
                 "all_columns_x": "source",
@@ -202,7 +191,7 @@ def load_world_bank_health_n_pop():
     tbl.description = utils.readfile(os.path.join(DATA_FOLDER, 'countries.md'))
     tbl.main_dttm_col = 'year'
     tbl.is_featured = True
-    tbl.database = get_or_create_db(db.session)
+    tbl.database = utils.get_or_create_main_db(caravel)
     db.session.merge(tbl)
     db.session.commit()
     tbl.fetch_metadata()
@@ -235,7 +224,7 @@ def load_world_bank_health_n_pop():
             slice_name="Region Filter",
             viz_type='filter_box',
             datasource_type='table',
-            table=tbl,
+            datasource_id=tbl.id,
             params=get_slice_json(
                 defaults,
                 viz_type='filter_box',
@@ -244,7 +233,7 @@ def load_world_bank_health_n_pop():
             slice_name="World's Population",
             viz_type='big_number',
             datasource_type='table',
-            table=tbl,
+            datasource_id=tbl.id,
             params=get_slice_json(
                 defaults,
                 since='2000',
@@ -256,7 +245,7 @@ def load_world_bank_health_n_pop():
             slice_name="Most Populated Countries",
             viz_type='table',
             datasource_type='table',
-            table=tbl,
+            datasource_id=tbl.id,
             params=get_slice_json(
                 defaults,
                 viz_type='table',
@@ -266,7 +255,7 @@ def load_world_bank_health_n_pop():
             slice_name="Growth Rate",
             viz_type='line',
             datasource_type='table',
-            table=tbl,
+            datasource_id=tbl.id,
             params=get_slice_json(
                 defaults,
                 viz_type='line',
@@ -278,7 +267,7 @@ def load_world_bank_health_n_pop():
             slice_name="% Rural",
             viz_type='world_map',
             datasource_type='table',
-            table=tbl,
+            datasource_id=tbl.id,
             params=get_slice_json(
                 defaults,
                 viz_type='world_map',
@@ -288,7 +277,7 @@ def load_world_bank_health_n_pop():
             slice_name="Life Expectancy VS Rural %",
             viz_type='bubble',
             datasource_type='table',
-            table=tbl,
+            datasource_id=tbl.id,
             params=get_slice_json(
                 defaults,
                 viz_type='bubble',
@@ -309,7 +298,7 @@ def load_world_bank_health_n_pop():
             slice_name="Rural Breakdown",
             viz_type='sunburst',
             datasource_type='table',
-            table=tbl,
+            datasource_id=tbl.id,
             params=get_slice_json(
                 defaults,
                 viz_type='sunburst',
@@ -321,7 +310,7 @@ def load_world_bank_health_n_pop():
             slice_name="World's Pop Growth",
             viz_type='area',
             datasource_type='table',
-            table=tbl,
+            datasource_id=tbl.id,
             params=get_slice_json(
                 defaults,
                 since="1960-01-01",
@@ -332,7 +321,7 @@ def load_world_bank_health_n_pop():
             slice_name="Box plot",
             viz_type='box_plot',
             datasource_type='table',
-            table=tbl,
+            datasource_id=tbl.id,
             params=get_slice_json(
                 defaults,
                 since="1960-01-01",
@@ -344,7 +333,7 @@ def load_world_bank_health_n_pop():
             slice_name="Treemap",
             viz_type='treemap',
             datasource_type='table',
-            table=tbl,
+            datasource_id=tbl.id,
             params=get_slice_json(
                 defaults,
                 since="1960-01-01",
@@ -356,7 +345,7 @@ def load_world_bank_health_n_pop():
             slice_name="Parallel Coordinates",
             viz_type='para',
             datasource_type='table',
-            table=tbl,
+            datasource_id=tbl.id,
             params=get_slice_json(
                 defaults,
                 since="2011-01-01",
@@ -593,7 +582,7 @@ def load_birth_names():
     if not obj:
         obj = TBL(table_name='birth_names')
     obj.main_dttm_col = 'ds'
-    obj.database = get_or_create_db(db.session)
+    obj.database = utils.get_or_create_main_db(caravel)
     obj.is_featured = True
     db.session.merge(obj)
     db.session.commit()
@@ -626,7 +615,7 @@ def load_birth_names():
             slice_name="Girls",
             viz_type='table',
             datasource_type='table',
-            table=tbl,
+            datasource_id=tbl.id,
             params=get_slice_json(
                 defaults,
                 groupby=['name'],
@@ -636,7 +625,7 @@ def load_birth_names():
             slice_name="Boys",
             viz_type='table',
             datasource_type='table',
-            table=tbl,
+            datasource_id=tbl.id,
             params=get_slice_json(
                 defaults,
                 groupby=['name'],
@@ -647,7 +636,7 @@ def load_birth_names():
             slice_name="Participants",
             viz_type='big_number',
             datasource_type='table',
-            table=tbl,
+            datasource_id=tbl.id,
             params=get_slice_json(
                 defaults,
                 viz_type="big_number", granularity="ds",
@@ -656,7 +645,7 @@ def load_birth_names():
             slice_name="Genders",
             viz_type='pie',
             datasource_type='table',
-            table=tbl,
+            datasource_id=tbl.id,
             params=get_slice_json(
                 defaults,
                 viz_type="pie", groupby=['gender'])),
@@ -664,7 +653,7 @@ def load_birth_names():
             slice_name="Genders by State",
             viz_type='dist_bar',
             datasource_type='table',
-            table=tbl,
+            datasource_id=tbl.id,
             params=get_slice_json(
                 defaults,
                 flt_eq_1="other", viz_type="dist_bar",
@@ -674,7 +663,7 @@ def load_birth_names():
             slice_name="Trends",
             viz_type='line',
             datasource_type='table',
-            table=tbl,
+            datasource_id=tbl.id,
             params=get_slice_json(
                 defaults,
                 viz_type="line", groupby=['name'],
@@ -683,7 +672,7 @@ def load_birth_names():
             slice_name="Title",
             viz_type='markup',
             datasource_type='table',
-            table=tbl,
+            datasource_id=tbl.id,
             params=get_slice_json(
                 defaults,
                 viz_type="markup", markup_type="html",
@@ -701,7 +690,7 @@ def load_birth_names():
             slice_name="Name Cloud",
             viz_type='word_cloud',
             datasource_type='table',
-            table=tbl,
+            datasource_id=tbl.id,
             params=get_slice_json(
                 defaults,
                 viz_type="word_cloud", size_from="10",
@@ -711,7 +700,7 @@ def load_birth_names():
             slice_name="Pivot Table",
             viz_type='pivot_table',
             datasource_type='table',
-            table=tbl,
+            datasource_id=tbl.id,
             params=get_slice_json(
                 defaults,
                 viz_type="pivot_table", metrics=['sum__num'],
@@ -720,7 +709,7 @@ def load_birth_names():
             slice_name="Number of Girls",
             viz_type='big_number_total',
             datasource_type='table',
-            table=tbl,
+            datasource_id=tbl.id,
             params=get_slice_json(
                 defaults,
                 viz_type="big_number_total", granularity="ds",
@@ -841,7 +830,7 @@ def load_unicode_test_data():
     if not obj:
         obj = TBL(table_name='unicode_test')
     obj.main_dttm_col = 'date'
-    obj.database = get_or_create_db(db.session)
+    obj.database = utils.get_or_create_main_db(caravel)
     obj.is_featured = False
     db.session.merge(obj)
     db.session.commit()
@@ -873,7 +862,7 @@ def load_unicode_test_data():
         slice_name="Unicode Cloud",
         viz_type='word_cloud',
         datasource_type='table',
-        table=tbl,
+        datasource_id=tbl.id,
         params=get_slice_json(slice_data),
     )
     merge_slice(slc)
@@ -920,7 +909,7 @@ def load_random_time_series_data():
     if not obj:
         obj = TBL(table_name='random_time_series')
     obj.main_dttm_col = 'ds'
-    obj.database = get_or_create_db(db.session)
+    obj.database = utils.get_or_create_main_db(caravel)
     obj.is_featured = False
     db.session.merge(obj)
     db.session.commit()
@@ -946,7 +935,7 @@ def load_random_time_series_data():
         slice_name="Calendar Heatmap",
         viz_type='cal_heatmap',
         datasource_type='table',
-        table=tbl,
+        datasource_id=tbl.id,
         params=get_slice_json(slice_data),
     )
     merge_slice(slc)
@@ -988,7 +977,7 @@ def load_long_lat_data():
     if not obj:
         obj = TBL(table_name='long_lat')
     obj.main_dttm_col = 'date'
-    obj.database = get_or_create_db(db.session)
+    obj.database = utils.get_or_create_main_db(caravel)
     obj.is_featured = False
     db.session.merge(obj)
     db.session.commit()
@@ -1016,7 +1005,7 @@ def load_long_lat_data():
         slice_name="Mapbox Long/Lat",
         viz_type='mapbox',
         datasource_type='table',
-        table=tbl,
+        datasource_id=tbl.id,
         params=get_slice_json(slice_data),
     )
     merge_slice(slc)
@@ -1052,7 +1041,7 @@ def load_multiformat_time_series_data():
     if not obj:
         obj = TBL(table_name='multiformat_time_series')
     obj.main_dttm_col = 'ds'
-    obj.database = get_or_create_db(db.session)
+    obj.database = utils.get_or_create_main_db(caravel)
     obj.is_featured = False
     dttm_and_expr_dict = {
         'ds': [None, None],
@@ -1095,7 +1084,7 @@ def load_multiformat_time_series_data():
             slice_name="Calendar Heatmap multiformat" + str(i),
             viz_type='cal_heatmap',
             datasource_type='table',
-            table=tbl,
+            datasource_id=tbl.id,
             params=get_slice_json(slice_data),
         )
         merge_slice(slc)

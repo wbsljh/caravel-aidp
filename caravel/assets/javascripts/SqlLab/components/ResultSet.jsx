@@ -13,12 +13,6 @@ class ResultSet extends React.Component {
       showModal: false,
     };
   }
-  shouldComponentUpdate(nextProps, nextState) {
-    return (
-      this.state.searchText !== nextState.searchText ||
-      this.state.showModal !== nextState.showModal
-    );
-  }
   changeSearch(event) {
     this.setState({ searchText: event.target.value });
   }
@@ -43,7 +37,7 @@ class ResultSet extends React.Component {
                 >
                   <i className="fa fa-line-chart m-l-1" /> Visualize
                 </Button>
-                <Button bsSize="small">
+                <Button bsSize="small" href={'/caravel/csv/' + this.props.query.id}>
                   <i className="fa fa-file-text-o" /> .CSV
                 </Button>
               </ButtonGroup>
@@ -60,7 +54,7 @@ class ResultSet extends React.Component {
         </div>
       );
     }
-    if (results && results.data.length > 0) {
+    if (results && results.data && results.data.length > 0) {
       return (
         <div>
           <VisualizeModal
@@ -72,7 +66,7 @@ class ResultSet extends React.Component {
           <div className="ResultSet">
             <Table
               data={results.data}
-              columns={results.columns}
+              columns={results.columns.map((col) => col.name)}
               sortable
               className="table table-condensed table-bordered"
               filterBy={this.state.searchText}
@@ -88,8 +82,8 @@ class ResultSet extends React.Component {
 }
 ResultSet.propTypes = {
   query: React.PropTypes.object,
-  showControls: React.PropTypes.boolean,
-  search: React.PropTypes.boolean,
+  showControls: React.PropTypes.bool,
+  search: React.PropTypes.bool,
   searchText: React.PropTypes.string,
 };
 ResultSet.defaultProps = {

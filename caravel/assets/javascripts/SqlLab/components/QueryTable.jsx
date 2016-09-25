@@ -7,12 +7,9 @@ import * as Actions from '../actions';
 import moment from 'moment';
 import { Table } from 'reactable';
 import { ProgressBar } from 'react-bootstrap';
-
-import SyntaxHighlighter from 'react-syntax-highlighter';
-import { github } from 'react-syntax-highlighter/dist/styles';
-
 import Link from './Link';
 import VisualizeModal from './VisualizeModal';
+import SqlShrink from './SqlShrink';
 import { STATE_BSSTYLE_MAP } from '../common';
 import { fDuration } from '../../modules/dates';
 
@@ -36,6 +33,7 @@ class QueryTable extends React.Component {
     this.props.actions.queryEditorSetSql({ id: query.sqlEditorId }, query.sql);
   }
   notImplemented() {
+    /* eslint no-alert: 0 */
     alert('Not implemented yet!');
   }
   render() {
@@ -44,12 +42,10 @@ class QueryTable extends React.Component {
       if (q.endDttm) {
         q.duration = fDuration(q.startDttm, q.endDttm);
       }
-      q.started = moment.utc(q.startDttm).format('HH:mm:ss');
-      const source = q.ctas ? q.executedSql : q.sql;
+      q.started = moment(q.startDttm).format('HH:mm:ss');
+      const source = (q.ctas) ? q.executedSql : q.sql;
       q.sql = (
-        <SyntaxHighlighter language="sql" style={github}>
-          {source || ''}
-        </SyntaxHighlighter>
+        <SqlShrink sql={source} />
       );
       q.output = q.tempTable;
       q.progress = (
@@ -127,7 +123,7 @@ QueryTable.propTypes = {
   queries: React.PropTypes.array,
 };
 QueryTable.defaultProps = {
-  columns: ['state', 'started', 'duration', 'progress', 'rows', 'sql', 'actions'],
+  columns: ['started', 'duration', 'rows'],
   queries: [],
 };
 

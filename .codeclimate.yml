@@ -1,6 +1,8 @@
 engines:
   csslint:
     enabled: false
+  duplication:
+    enabled: false
   eslint:
     enabled: true
     config:
@@ -8,9 +10,12 @@ engines:
   pep8:
     enabled: true
   fixme:
-    enabled: true
+    enabled: false
   radon:
     enabled: true
+    checks:
+      Complexity:
+        enabled: false
 ratings:
   paths:
   - "**.py"
@@ -26,3 +31,4 @@ exclude_paths:
 - "caravel/assets/vendor/"
 - "caravel/assets/node_modules/"
 - "caravel/assets/javascripts/dist/"
+- "caravel/migrations"

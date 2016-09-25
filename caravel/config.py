@@ -8,7 +8,9 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
+from caravel import app
 
+import json
 import os
 
 from dateutil import tz
@@ -22,6 +24,11 @@ if not os.path.exists(DATA_DIR):
 # ---------------------------------------------------------
 # Caravel specific config
 # ---------------------------------------------------------
+PACKAGE_DIR = os.path.join(BASE_DIR, 'static', 'assets')
+PACKAGE_FILE = os.path.join(PACKAGE_DIR, 'package.json')
+with open(PACKAGE_FILE) as package_file:
+    VERSION_STRING = json.load(package_file)['version']
+
 ROW_LIMIT = 50000
 CARAVEL_WORKERS = 16
 
@@ -40,6 +47,9 @@ SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(DATA_DIR, 'caravel.db')
 # SQLALCHEMY_DATABASE_URI = 'mysql://myapp@localhost/myapp'
 # SQLALCHEMY_DATABASE_URI = 'postgresql://root:password@localhost/myapp'
 
+# The limit of queries fetched for query search
+QUERY_SEARCH_LIMIT = 1000
+
 # Flask-WTF flag for CSRF
 CSRF_ENABLED = True
 
@@ -48,6 +58,9 @@ DEBUG = False
 
 # Whether to show the stacktrace on 500 error
 SHOW_STACKTRACE = True
+
+# Extract and use X-Forwarded-For/X-Forwarded-Proto headers?
+ENABLE_PROXY_FIX = False
 
 # ------------------------------
 # GLOBALS FOR APP Builder
@@ -154,6 +167,13 @@ VIZ_TYPE_BLACKLIST = []
 
 DRUID_DATA_SOURCE_BLACKLIST = []
 
+# --------------------------------------------------
+# Modules and datasources to be registered
+# --------------------------------------------------
+DEFAULT_MODULE_DS_MAP = {'caravel.models': ['DruidDatasource', 'SqlaTable']}
+ADDITIONAL_MODULE_DS_MAP = {}
+
+
 """
 1) http://docs.python-guide.org/en/latest/writing/logging/
 2) https://docs.python.org/2/library/logging.config.html
@@ -203,8 +223,17 @@ CELERY_CONFIG = None
 SQL_CELERY_DB_FILE_PATH = os.path.join(DATA_DIR, 'celerydb.sqlite')
 SQL_CELERY_RESULTS_DB_FILE_PATH = os.path.join(DATA_DIR, 'celery_results.sqlite')
 
+# static http headers to be served by your Caravel server.
+# The following example prevents iFrame from other domains
+# and "clickjacking" as a result
+# HTTP_HEADERS = {'X-Frame-Options': 'SAMEORIGIN'}
+HTTP_HEADERS = {}
+
 # The db id here results in selecting this one as a default in SQL Lab
 DEFAULT_DB_ID = None
+
+# Timeout duration for SQL Lab synchronous queries
+SQLLAB_TIMEOUT = 30
 
 try:
     from caravel_config import *  # noqa

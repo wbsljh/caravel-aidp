@@ -10,17 +10,10 @@ import unittest
 from flask_appbuilder.security.sqla import models as ab_models
 
 import caravel
-from caravel import app, db, models, utils, appbuilder
+from caravel import app, db, models, utils, appbuilder, sm
 
 os.environ['CARAVEL_CONFIG'] = 'tests.caravel_test_config'
 
-'''
-app.config['TESTING'] = True
-app.config['CSRF_ENABLED'] = False
-app.config['SECRET_KEY'] = 'thisismyscretkey'
-app.config['WTF_CSRF_ENABLED'] = False
-app.config['PUBLIC_ROLE_LIKE_GAMMA'] = True
-'''
 BASE_DIR = app.config.get("BASE_DIR")
 
 
@@ -29,7 +22,7 @@ class CaravelTestCase(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(CaravelTestCase, self).__init__(*args, **kwargs)
         self.client = app.test_client()
-
+        self.maxDiff = None
         utils.init(caravel)
 
         admin = appbuilder.sm.find_user('admin')
@@ -53,6 +46,27 @@ class CaravelTestCase(unittest.TestCase):
                 appbuilder.sm.find_role('Alpha'),
                 password='general')
 
+        # create druid cluster and druid datasources
+        session = db.session
+        cluster = session.query(models.DruidCluster).filter_by(
+            cluster_name="druid_test").first()
+        if not cluster:
+            cluster = models.DruidCluster(cluster_name="druid_test")
+            session.add(cluster)
+            session.commit()
+
+            druid_datasource1 = models.DruidDatasource(
+                datasource_name='druid_ds_1',
+                cluster_name='druid_test'
+            )
+            session.add(druid_datasource1)
+            druid_datasource2 = models.DruidDatasource(
+                datasource_name='druid_ds_2',
+                cluster_name='druid_test'
+            )
+            session.add(druid_datasource2)
+            session.commit()
+
         utils.init(caravel)
 
     def login(self, username='admin', password='general'):
@@ -67,6 +81,24 @@ class CaravelTestCase(unittest.TestCase):
         query = session.query(models.Query).filter_by(sql=sql).first()
         session.close()
         return query
+
+    def get_latest_query(self, sql):
+        session = db.create_scoped_session()
+        query = (
+            session.query(models.Query)
+            .order_by(models.Query.id.desc())
+            .first()
+        )
+        session.close()
+        return query
+
+    def get_access_requests(self, username, ds_type, ds_id):
+            return db.session.query(models.DatasourceAccessRequest).filter(
+                models.DatasourceAccessRequest.created_by_fk ==
+                sm.find_user(username=username).id,
+                models.DatasourceAccessRequest.datasource_type == ds_type,
+                models.DatasourceAccessRequest.datasource_id == ds_id
+            ).all()
 
     def logout(self):
         self.client.get('/logout/', follow_redirects=True)

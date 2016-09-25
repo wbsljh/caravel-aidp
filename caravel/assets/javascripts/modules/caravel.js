@@ -58,7 +58,7 @@ const px = function () {
     const containerId = data.token + '_con';
     const selector = '#' + containerId;
     const container = $(selector);
-    const sliceId = data.sliceId;
+    const sliceId = data.slice_id;
     let dttm = 0;
     const stopwatch = function () {
       dttm += 10;
@@ -81,9 +81,11 @@ const px = function () {
         const parser = document.createElement('a');
         parser.href = data.json_endpoint;
         if (dashboard !== undefined) {
-          const flts =
-            newParams.extraFilters === false ? '' :
-              encodeURIComponent(JSON.stringify(dashboard.filters));
+          let flts = '';
+          if (newParams.extraFilters !== false) {
+            flts = dashboard.effectiveExtraFilters(sliceId);
+            flts = encodeURIComponent(JSON.stringify(flts));
+          }
           qrystr = parser.search + '&extra_filters=' + flts;
         } else if ($('#query').length === 0) {
           qrystr = parser.search;
@@ -127,8 +129,9 @@ const px = function () {
           cachedSelector = $('#is_cached');
           if (data !== undefined && data.is_cached) {
             cachedSelector
-              .attr('title',
-                    'Served from data cached at ' + data.cached_dttm + '. Click to force-refresh')
+              .attr(
+                'title',
+                `Served from data cached at ${data.cached_dttm}. Click [Query] to force-refresh`)
               .show()
               .tooltip('fixTitle');
           } else {
@@ -150,19 +153,13 @@ const px = function () {
               .tooltip('fixTitle');
           }
         }
+
         if (data !== undefined) {
-          $('#query_container').html(data.query);
+          slice.viewSqlQuery = data.query;
         }
+
         $('#timer').removeClass('label-warning label-danger');
         $('#timer').addClass('label-success');
-        $('span.view_query').removeClass('disabled');
-        $('#json').click(function () {
-          window.location = data.json_endpoint;
-        });
-        $('#csv').click(function () {
-          window.location = data.csv_endpoint;
-        });
-        $('.btn-group.results span,a').removeAttr('disabled');
         $('.query-and-save button').removeAttr('disabled');
         always(data);
       },
@@ -194,7 +191,6 @@ const px = function () {
         container.show();
         $('span.query').removeClass('disabled');
         $('#timer').addClass('btn-danger');
-        $('.btn-group.results span,a').removeAttr('disabled');
         $('.query-and-save button').removeAttr('disabled');
         always(data);
       },

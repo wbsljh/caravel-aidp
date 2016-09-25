@@ -9,9 +9,7 @@ import {
   InputGroup,
   Form,
   FormControl,
-  DropdownButton,
   Label,
-  MenuItem,
   OverlayTrigger,
   Row,
   Tooltip,
@@ -27,7 +25,6 @@ import { connect } from 'react-redux';
 import * as Actions from '../actions';
 
 import shortid from 'shortid';
-import ButtonWithTooltip from './ButtonWithTooltip';
 import SouthPane from './SouthPane';
 import Timer from './Timer';
 
@@ -52,8 +49,8 @@ class SqlEditor extends React.Component {
       this.startQuery();
     }
   }
-  runQuery() {
-    this.startQuery();
+  runQuery(runAsync = false) {
+    this.startQuery(runAsync);
   }
   startQuery(runAsync = false, ctas = false) {
     const that = this;
@@ -76,10 +73,10 @@ class SqlEditor extends React.Component {
 
     const sqlJsonUrl = '/caravel/sql_json/';
     const sqlJsonRequest = {
-      async: runAsync,
       client_id: query.id,
       database_id: this.props.queryEditor.dbId,
       json: true,
+      runAsync,
       schema: this.props.queryEditor.schema,
       select_as_cta: ctas,
       sql: this.props.queryEditor.sql,
@@ -97,15 +94,19 @@ class SqlEditor extends React.Component {
           that.props.actions.querySuccess(query, results);
         }
       },
-      error(err) {
+      error(err, textStatus, errorThrown) {
         let msg;
         try {
           msg = err.responseJSON.error;
         } catch (e) {
-          msg = (err.responseText) ? err.responseText : e;
+          if (err.responseText !== undefined) {
+            msg = err.responseText;
+          }
         }
-        if (typeof(msg) !== 'string') {
-          msg = JSON.stringify(msg);
+        if (textStatus === 'error' && errorThrown === '') {
+          msg = 'Could not connect to server';
+        } else if (msg === null) {
+          msg = `[${textStatus}] ${errorThrown}`;
         }
         that.props.actions.queryFailed(query, msg);
       },
@@ -135,18 +136,46 @@ class SqlEditor extends React.Component {
   ctasChanged(event) {
     this.setState({ ctas: event.target.value });
   }
+
+  sqlEditorHeight() {
+    // quick hack to make the white bg of the tab stretch full height.
+    const tabNavHeight = 40;
+    const navBarHeight = 56;
+    const mysteryVerticalHeight = 50;
+    return window.innerHeight - tabNavHeight - navBarHeight - mysteryVerticalHeight;
+  }
+
   render() {
-    let runButtons = (
-      <ButtonGroup bsSize="small" className="inline m-r-5 pull-left">
+    let runButtons = [];
+    if (this.props.database && this.props.database.allow_run_sync) {
+      runButtons.push(
         <Button
           bsSize="small"
           bsStyle="primary"
           style={{ width: '100px' }}
-          onClick={this.runQuery.bind(this)}
+          onClick={this.runQuery.bind(this, false)}
           disabled={!(this.props.queryEditor.dbId)}
         >
           <i className="fa fa-table" /> Run Query
         </Button>
+      );
+    }
+    if (this.props.database && this.props.database.allow_run_async) {
+      runButtons.push(
+        <Button
+          bsSize="small"
+          bsStyle="primary"
+          style={{ width: '100px' }}
+          onClick={this.runQuery.bind(this, true)}
+          disabled={!(this.props.queryEditor.dbId)}
+        >
+          <i className="fa fa-table" /> Run Async
+        </Button>
+      );
+    }
+    runButtons = (
+      <ButtonGroup bsSize="small" className="inline m-r-5 pull-left">
+        {runButtons}
       </ButtonGroup>
     );
     if (this.props.latestQuery && this.props.latestQuery.state === 'running') {
@@ -163,35 +192,6 @@ class SqlEditor extends React.Component {
         </ButtonGroup>
       );
     }
-    const rightButtons = (
-      <ButtonGroup className="inlineblock">
-        <ButtonWithTooltip
-          tooltip="Save this query in your workspace"
-          placement="left"
-          bsSize="small"
-          onClick={this.addWorkspaceQuery.bind(this)}
-        >
-          <i className="fa fa-save" />&nbsp;
-        </ButtonWithTooltip>
-        <DropdownButton
-          id="ddbtn-export"
-          pullRight
-          bsSize="small"
-          title={<i className="fa fa-file-o" />}
-        >
-          <MenuItem
-            onClick={this.notImplemented}
-          >
-            <i className="fa fa-file-text-o" /> export to .csv
-          </MenuItem>
-          <MenuItem
-            onClick={this.notImplemented}
-          >
-            <i className="fa fa-file-code-o" /> export to .json
-          </MenuItem>
-        </DropdownButton>
-      </ButtonGroup>
-    );
     let limitWarning = null;
     const rowLimit = 1000;
     if (this.props.latestQuery && this.props.latestQuery.rows === rowLimit) {
@@ -207,78 +207,80 @@ class SqlEditor extends React.Component {
         </OverlayTrigger>
       );
     }
+    let ctasControls;
+    if (this.props.database && this.props.database.allow_ctas) {
+      ctasControls = (
+        <FormGroup>
+          <InputGroup>
+            <FormControl
+              type="text"
+              bsSize="small"
+              className="input-sm"
+              placeholder="new table name"
+              onChange={this.ctasChanged.bind(this)}
+            />
+            <InputGroup.Button>
+              <Button
+                bsSize="small"
+                disabled={this.state.ctas.length === 0}
+                onClick={this.createTableAs.bind(this)}
+              >
+                <i className="fa fa-table" /> CTAS
+              </Button>
+            </InputGroup.Button>
+          </InputGroup>
+        </FormGroup>
+      );
+    }
     const editorBottomBar = (
       <div className="sql-toolbar clearfix">
         <div className="pull-left">
           <Form inline>
             {runButtons}
-            <FormGroup>
-              <InputGroup>
-                <FormControl
-                  type="text"
-                  bsSize="small"
-                  className="input-sm"
-                  placeholder="new table name"
-                  onChange={this.ctasChanged.bind(this)}
-                />
-                <InputGroup.Button>
-                  <Button
-                    bsSize="small"
-                    disabled={this.state.ctas.length === 0}
-                    onClick={this.createTableAs.bind(this)}
-                  >
-                    <i className="fa fa-table" /> CTAS
-                  </Button>
-                </InputGroup.Button>
-              </InputGroup>
-            </FormGroup>
+            {ctasControls}
           </Form>
         </div>
         <div className="pull-right">
           {limitWarning}
           <Timer query={this.props.latestQuery} />
-          {rightButtons}
         </div>
       </div>
     );
     return (
-      <div className="SqlEditor">
-        <div>
-          <div>
-            <Row>
-              <Col md={3}>
-                <SqlEditorLeft queryEditor={this.props.queryEditor} />
-              </Col>
-              <Col md={9}>
-                <AceEditor
-                  mode="sql"
-                  name={this.props.queryEditor.id}
-                  theme="github"
-                  minLines={5}
-                  maxLines={30}
-                  onChange={this.textChange.bind(this)}
-                  height="200px"
-                  width="100%"
-                  editorProps={{ $blockScrolling: true }}
-                  enableBasicAutocompletion
-                  value={this.props.queryEditor.sql}
-                />
-                {editorBottomBar}
-                <br />
-                <SouthPane latestQuery={this.props.latestQuery} sqlEditor={this} />
-              </Col>
-            </Row>
-          </div>
-        </div>
+      <div className="SqlEditor" style={{ minHeight: this.sqlEditorHeight() }}>
+        <Row>
+          <Col md={3}>
+            <SqlEditorLeft queryEditor={this.props.queryEditor} />
+          </Col>
+          <Col md={9}>
+            <AceEditor
+              mode="sql"
+              name={this.props.queryEditor.id}
+              theme="github"
+              minLines={7}
+              maxLines={30}
+              onChange={this.textChange.bind(this)}
+              height="200px"
+              width="100%"
+              editorProps={{ $blockScrolling: true }}
+              enableBasicAutocompletion
+              value={this.props.queryEditor.sql}
+            />
+            {editorBottomBar}
+            <br />
+            <SouthPane latestQuery={this.props.latestQuery} sqlEditor={this} />
+          </Col>
+        </Row>
       </div>
     );
   }
 }
 
 SqlEditor.propTypes = {
-  queryEditor: React.PropTypes.object,
   actions: React.PropTypes.object,
+  database: React.PropTypes.object,
   latestQuery: React.PropTypes.object,
+  queryEditor: React.PropTypes.object,
 };
 
 SqlEditor.defaultProps = {

@@ -172,12 +172,9 @@ class BaseViz(object):
             raise Exception("No data, review your incantations!")
         else:
             if 'timestamp' in df.columns:
-                if timestamp_format == "epoch_s":
+                if timestamp_format in ("epoch_s", "epoch_ms"):
                     df.timestamp = pd.to_datetime(
-                        df.timestamp, utc=False, unit="s")
-                elif timestamp_format == "epoch_ms":
-                    df.timestamp = pd.to_datetime(
-                        df.timestamp, utc=False, unit="ms")
+                        df.timestamp, utc=False)
                 else:
                     df.timestamp = pd.to_datetime(
                         df.timestamp, utc=False, format=timestamp_format)
@@ -195,6 +192,12 @@ class BaseViz(object):
     def form_class(self):
         return FormFactory(self).get_form()
 
+    def get_extra_filters(self):
+        extra_filters = self.form_data.get('extra_filters')
+        if not extra_filters:
+            return {}
+        return json.loads(extra_filters)
+
     def query_filters(self, is_having_filter=False):
         """Processes the filters for the query"""
         form_data = self.form_data
@@ -208,15 +211,17 @@ class BaseViz(object):
             if col and op and eq is not None:
                 filters.append((col, op, eq))
 
+        if is_having_filter:
+            return filters
+
         # Extra filters (coming from dashboard)
-        extra_filters = form_data.get('extra_filters')
-        if extra_filters and not is_having_filter:
-            extra_filters = json.loads(extra_filters)
-            for slice_filters in extra_filters.values():
-                for col, vals in slice_filters.items():
-                    if col and vals:
-                        if col in self.datasource.filterable_column_names:
-                            filters += [(col, 'in', ",".join(vals))]
+        for col, vals in self.get_extra_filters().items():
+            if not (col and vals):
+                continue
+            elif col in self.datasource.filterable_column_names:
+                # Quote values with comma to avoid conflict
+                vals = ["'{}'".format(x) if "," in x else x for x in vals]
+                filters += [(col, 'in', ",".join(vals))]
         return filters
 
     def query_obj(self):
@@ -224,17 +229,21 @@ class BaseViz(object):
         form_data = self.form_data
         groupby = form_data.get("groupby") or []
         metrics = form_data.get("metrics") or ['count']
-        granularity = \
+        extra_filters = self.get_extra_filters()
+        granularity = (
             form_data.get("granularity") or form_data.get("granularity_sqla")
+        )
         limit = int(form_data.get("limit", 0))
         row_limit = int(
             form_data.get("row_limit", config.get("ROW_LIMIT")))
-        since = form_data.get("since", "1 year ago")
+        since = (
+            extra_filters.get('__from') or form_data.get("since", "1 year ago")
+        )
         from_dttm = utils.parse_human_datetime(since)
         now = datetime.now()
         if from_dttm > now:
             from_dttm = now - (from_dttm - now)
-        until = form_data.get("until", "now")
+        until = extra_filters.get('__to') or form_data.get("until", "now")
         to_dttm = utils.parse_human_datetime(until)
         if from_dttm > to_dttm:
             flasher("The date range doesn't seem right.", "danger")
@@ -245,7 +254,7 @@ class BaseViz(object):
         extras = {
             'where': form_data.get("where", ''),
             'having': form_data.get("having", ''),
-            'having_druid': self.query_filters(True),
+            'having_druid': self.query_filters(is_having_filter=True),
             'time_grain_sqla': form_data.get("time_grain_sqla", ''),
             'druid_time_origin': form_data.get("druid_time_origin", ''),
         }
@@ -276,12 +285,12 @@ class BaseViz(object):
             return self.datasource.database.cache_timeout
         return config.get("CACHE_DEFAULT_TIMEOUT")
 
-    def get_json(self):
+    def get_json(self, force=False):
         """Handles caching around the json payload retrieval"""
         cache_key = self.cache_key
         payload = None
-
-        if self.form_data.get('force') != 'true':
+        force = force if force else self.form_data.get('force') == 'true'
+        if not force:
             payload = cache.get(cache_key)
 
         if payload:
@@ -1634,6 +1643,7 @@ class FilterBoxViz(BaseViz):
     fieldsets = ({
         'label': None,
         'fields': (
+            ('date_filter', None),
             'groupby',
             'metric',
         )
@@ -1647,8 +1657,8 @@ class FilterBoxViz(BaseViz):
 
     def query_obj(self):
         qry = super(FilterBoxViz, self).query_obj()
-        groupby = self.form_data['groupby']
-        if len(groupby) < 1:
+        groupby = self.form_data.get('groupby')
+        if len(groupby) < 1 and not self.form_data.get('date_filter'):
             raise Exception("Pick at least one filter field")
         qry['metrics'] = [
             self.form_data['metric']]
@@ -1656,7 +1666,7 @@ class FilterBoxViz(BaseViz):
 
     def get_data(self):
         qry = self.query_obj()
-        filters = [g for g in qry['groupby']]
+        filters = [g for g in self.form_data['groupby']]
         d = {}
         for flt in filters:
             qry['groupby'] = [flt]

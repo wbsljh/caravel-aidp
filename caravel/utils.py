@@ -4,13 +4,14 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+from builtins import object
 from datetime import date, datetime
 import decimal
 import functools
 import json
 import logging
 import numpy
-import time
+import signal
 import uuid
 
 import parsedatetime
@@ -22,10 +23,15 @@ from markdown import markdown as md
 from sqlalchemy.types import TypeDecorator, TEXT
 from pydruid.utils.having import Having
 
+
 EPOCH = datetime(1970, 1, 1)
 
 
 class CaravelException(Exception):
+    pass
+
+
+class CaravelTimeoutException(Exception):
     pass
 
 
@@ -88,6 +94,22 @@ class memoized(object):  # noqa
     def __get__(self, obj, objtype):
         """Support instance methods."""
         return functools.partial(self.__call__, obj)
+
+
+def get_or_create_main_db(caravel):
+    db = caravel.db
+    config = caravel.app.config
+    DB = caravel.models.Database
+    logging.info("Creating database reference")
+    dbobj = db.session.query(DB).filter_by(database_name='main').first()
+    if not dbobj:
+        dbobj = DB(database_name="main")
+    logging.info(config.get("SQLALCHEMY_DATABASE_URI"))
+    dbobj.set_sqlalchemy_uri(config.get("SQLALCHEMY_DATABASE_URI"))
+    dbobj.expose_in_sqllab = True
+    db.session.add(dbobj)
+    db.session.commit()
+    return dbobj
 
 
 class DimSelector(Having):
@@ -190,54 +212,71 @@ class JSONEncodedDict(TypeDecorator):
 
 def init(caravel):
     """Inits the Caravel application with security roles and such"""
+    ADMIN_ONLY_VIEW_MENUES = set([
+        'ResetPasswordView',
+        'RoleModelView',
+        'Security',
+        'UserDBModelView',
+        'SQL Lab',
+        'AccessRequestsModelView',
+    ])
+
+    ADMIN_ONLY_PERMISSIONS = set([
+        'can_sync_druid_source',
+        'can_approve',
+    ])
+
+    ALPHA_ONLY_PERMISSIONS = set([
+        'all_datasource_access',
+        'can_add',
+        'can_download',
+        'can_delete',
+        'can_edit',
+        'can_save',
+        'datasource_access',
+        'database_access',
+        'muldelete',
+    ])
+
     db = caravel.db
     models = caravel.models
+    config = caravel.app.config
     sm = caravel.appbuilder.sm
     alpha = sm.add_role("Alpha")
     admin = sm.add_role("Admin")
-    config = caravel.app.config
+    get_or_create_main_db(caravel)
 
     merge_perm(sm, 'all_datasource_access', 'all_datasource_access')
 
     perms = db.session.query(ab_models.PermissionView).all()
+    # set alpha and admin permissions
     for perm in perms:
         if (
                 perm.permission and
                 perm.permission.name in ('datasource_access', 'database_access')):
             continue
-        if perm.view_menu and perm.view_menu.name not in (
-                'ResetPasswordView',
-                'RoleModelView',
-                'Security',
-                'UserDBModelView',
-                'SQL Lab'):
+        if (
+                perm.view_menu and
+                perm.view_menu.name not in ADMIN_ONLY_VIEW_MENUES and
+                perm.permission and
+                perm.permission.name not in ADMIN_ONLY_PERMISSIONS):
 
             sm.add_permission_role(alpha, perm)
         sm.add_permission_role(admin, perm)
+
     gamma = sm.add_role("Gamma")
     public_role = sm.find_role("Public")
     public_role_like_gamma = \
         public_role and config.get('PUBLIC_ROLE_LIKE_GAMMA', False)
+
+    # set gamma permissions
     for perm in perms:
         if (
-                perm.view_menu and perm.view_menu.name not in (
-                    'ResetPasswordView',
-                    'RoleModelView',
-                    'UserDBModelView',
-                    'SQL Lab',
-                    'Security') and
+                perm.view_menu and
+                perm.view_menu.name not in ADMIN_ONLY_VIEW_MENUES and
                 perm.permission and
-                perm.permission.name not in (
-                    'all_datasource_access',
-                    'can_add',
-                    'can_download',
-                    'can_delete',
-                    'can_edit',
-                    'can_save',
-                    'datasource_access',
-                    'database_access',
-                    'muldelete',
-                )):
+                perm.permission.name not in ADMIN_ONLY_PERMISSIONS and
+                perm.permission.name not in ALPHA_ONLY_PERMISSIONS):
             sm.add_permission_role(gamma, perm)
             if public_role_like_gamma:
                 sm.add_permission_role(public_role, perm)
@@ -327,7 +366,7 @@ def datetime_to_epoch(dttm):
 
 
 def now_as_float():
-    return datetime_to_epoch(datetime.now())
+    return datetime_to_epoch(datetime.utcnow())
 
 
 def json_int_dttm_ser(obj):
@@ -396,3 +435,39 @@ def generic_find_constraint_name(table, columns, referenced, db):
                 fk.referred_table.name == referenced and
                 set(fk.column_keys) == columns):
             return fk.name
+
+
+def validate_json(obj):
+    if obj:
+        try:
+            json.loads(obj)
+        except Exception:
+            raise CaravelException("JSON is not valid")
+
+
+class timeout(object):
+    """
+    To be used in a ``with`` block and timeout its content.
+    """
+    def __init__(self, seconds=1, error_message='Timeout'):
+        self.seconds = seconds
+        self.error_message = error_message
+
+    def handle_timeout(self, signum, frame):
+        logging.error("Process timed out")
+        raise CaravelTimeoutException(self.error_message)
+
+    def __enter__(self):
+        try:
+            signal.signal(signal.SIGALRM, self.handle_timeout)
+            signal.alarm(self.seconds)
+        except ValueError as e:
+            logging.warning("timeout can't be used in the current context")
+            logging.exception(e)
+
+    def __exit__(self, type, value, traceback):
+        try:
+            signal.alarm(0)
+        except ValueError as e:
+            logging.warning("timeout can't be used in the current context")
+            logging.exception(e)

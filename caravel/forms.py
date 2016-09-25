@@ -329,8 +329,8 @@ class FormFactory(object):
             }),
             'bottom_margin': (FreeFormSelectField, {
                 "label": _("Bottom Margin"),
-                "choices": self.choicify([50, 75, 100, 125, 150, 200]),
-                "default": 50,
+                "choices": self.choicify(['auto', 50, 75, 100, 125, 150, 200]),
+                "default": 'auto',
                 "description": _(
                     "Bottom marging, in pixels, allowing for more room for "
                     "axis labels"),
@@ -749,6 +749,11 @@ class FormFactory(object):
                 "description": _(
                     "Whether to display the time range interactive selector")
             }),
+            'date_filter': (BetterBooleanField, {
+                "label": _("Date Filter"),
+                "default": False,
+                "description": _("Whether to include a time filter")
+            }),
             'show_datatable': (BetterBooleanField, {
                 "label": _("Data Table"),
                 "default": False,
@@ -977,7 +982,7 @@ class FormFactory(object):
         viz = self.viz
         field_css_classes = {}
         for name, obj in self.field_dict.items():
-            field_css_classes[name] = ['form-control']
+            field_css_classes[name] = ['form-control', 'input-sm']
             s = self.fieltype_class.get(obj.field_class)
             if s:
                 field_css_classes[name] += [s]

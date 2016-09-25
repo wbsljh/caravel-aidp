@@ -6,15 +6,15 @@ import { connect } from 'react-redux';
 import * as Actions from '../actions';
 import shortid from 'shortid';
 import Select from 'react-select';
+import { Label, Button } from 'react-bootstrap';
 import TableElement from './TableElement';
+import DatabaseSelect from './DatabaseSelect';
 
 
 class SqlEditorTopToolbar extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      databaseLoading: false,
-      databaseOptions: [],
       schemaLoading: false,
       schemaOptions: [],
       tableLoading: false,
@@ -22,9 +22,22 @@ class SqlEditorTopToolbar extends React.Component {
     };
   }
   componentWillMount() {
-    this.fetchDatabaseOptions();
     this.fetchSchemas();
     this.fetchTables();
+  }
+  onChange(db) {
+    const val = (db) ? db.value : null;
+    this.setState({ schemaOptions: [] });
+    this.props.actions.queryEditorSetDb(this.props.queryEditor, val);
+    if (!(db)) {
+      this.setState({ tableOptions: [] });
+    } else {
+      this.fetchTables(val, this.props.queryEditor.schema);
+      this.fetchSchemas(val);
+    }
+  }
+  resetState() {
+    this.props.actions.resetState();
   }
   fetchTables(dbId, schema) {
     const actualDbId = dbId || this.props.queryEditor.dbId;
@@ -60,26 +73,6 @@ class SqlEditorTopToolbar extends React.Component {
       });
     }
   }
-  changeDb(db) {
-    const val = (db) ? db.value : null;
-    this.setState({ schemaOptions: [] });
-    this.props.actions.queryEditorSetDb(this.props.queryEditor, val);
-    if (!(db)) {
-      this.setState({ tableOptions: [] });
-      return;
-    }
-    this.fetchTables(val, this.props.queryEditor.schema);
-    this.fetchSchemas(val);
-  }
-  fetchDatabaseOptions() {
-    this.setState({ databaseLoading: true });
-    const url = '/databaseasync/api/read';
-    $.get(url, (data) => {
-      const options = data.result.map((db) => ({ value: db.id, label: db.database_name }));
-      this.setState({ databaseOptions: options });
-      this.setState({ databaseLoading: false });
-    });
-  }
   closePopover(ref) {
     this.refs[ref].hide();
   }
@@ -87,43 +80,46 @@ class SqlEditorTopToolbar extends React.Component {
     const tableName = tableOpt.value;
     const qe = this.props.queryEditor;
     const url = `/caravel/table/${qe.dbId}/${tableName}/${qe.schema}/`;
+
+    this.setState({ tableLoading: true });
     $.get(url, (data) => {
       this.props.actions.addTable({
         id: shortid.generate(),
         dbId: this.props.queryEditor.dbId,
         queryEditorId: this.props.queryEditor.id,
         name: data.name,
+        indexes: data.indexes,
         schema: qe.schema,
         columns: data.columns,
         expanded: true,
       });
+      this.setState({ tableLoading: false });
     })
     .fail(() => {
       this.props.actions.addAlert({
         msg: 'Error occurred while fetching metadata',
         bsStyle: 'danger',
       });
+      this.setState({ tableLoading: false });
     });
   }
   render() {
+    let networkAlert = null;
+    if (!this.props.networkOn) {
+      networkAlert = <p><Label bsStyle="danger">OFFLINE</Label></p>;
+    }
     const tables = this.props.tables.filter((t) => (t.queryEditorId === this.props.queryEditor.id));
+    const shouldShowReset = window.location.search === '?reset=1';
     return (
       <div className="clearfix sql-toolbar">
+        {networkAlert}
         <div>
-          <Select
-            name="select-db"
-            placeholder="[Database]"
-            options={this.state.databaseOptions}
-            value={this.props.queryEditor.dbId}
-            isLoading={this.state.databaseLoading}
-            autosize={false}
-            onChange={this.changeDb.bind(this)}
-          />
+          <DatabaseSelect onChange={this.onChange.bind(this)} />
         </div>
         <div className="m-t-5">
           <Select
             name="select-schema"
-            placeholder="[Schema]"
+            placeholder={`Select a schema (${this.state.schemaOptions.length})`}
             options={this.state.schemaOptions}
             value={this.props.queryEditor.schema}
             isLoading={this.state.schemaLoading}
@@ -136,7 +132,7 @@ class SqlEditorTopToolbar extends React.Component {
             name="select-table"
             ref="selectTable"
             isLoading={this.state.tableLoading}
-            placeholder="Add a table"
+            placeholder={`Add a table (${this.state.tableOptions.length})`}
             autosize={false}
             value={this.state.tableName}
             onChange={this.changeTable.bind(this)}
@@ -149,6 +145,11 @@ class SqlEditorTopToolbar extends React.Component {
             <TableElement table={table} queryEditor={this.props.queryEditor} />
           ))}
         </div>
+        {shouldShowReset &&
+          <Button bsSize="small" bsStyle="danger" onClick={this.resetState.bind(this)}>
+            <i className="fa fa-bomb" /> Reset State
+          </Button>
+        }
       </div>
     );
   }
@@ -158,6 +159,7 @@ SqlEditorTopToolbar.propTypes = {
   queryEditor: React.PropTypes.object,
   tables: React.PropTypes.array,
   actions: React.PropTypes.object,
+  networkOn: React.PropTypes.bool,
 };
 
 SqlEditorTopToolbar.defaultProps = {
@@ -167,6 +169,7 @@ SqlEditorTopToolbar.defaultProps = {
 function mapStateToProps(state) {
   return {
     tables: state.tables,
+    networkOn: state.networkOn,
   };
 }
 

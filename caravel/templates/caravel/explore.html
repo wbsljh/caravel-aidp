@@ -106,8 +106,11 @@
                 <div class="panel-title">
                   {{ _("Filters") }}
                   <i  class="fa fa-question-circle-o" data-toggle="tooltip"
-                      data-placement="bottom"
-                      title="{{_("Filters are defined using comma delimited strings as in 'US,FR,Other'")}}. {{_("Leave the value field empty to filter empty strings or nulls")}}">
+                      data-placement="right"
+                      title="{{_("Filters are defined using comma delimited strings as in <US,FR,Other>")}}.
+                      {{_("Leave the value field empty to filter empty strings or nulls")}}.
+                      {{_("For filters with comma in values, wrap them in single quotes,
+                      as in <NY, 'Tahoe, CA', DC>")}}">
                   </i>
                 </div>
               </div>
@@ -186,11 +189,11 @@
         <div class="panel panel-default">
           <div class="panel-heading">
             <div class="panel-title">
-              <div class="row">
-                <div class="col-md-6">
+              <div class="clearfix">
+                <div class="pull-left">
                   {% include 'caravel/partials/_explore_title.html' %}
                 </div>
-                <div class="col-md-6">
+                <div class="pull-right">
                   <div class="slice-meta-controls pull-right">
                     <span id="is_cached" class="label label-default m-r-3" title="{{ _("Force refresh" )}}" data-toggle="tooltip">
                       cached
@@ -202,36 +205,12 @@
                       data-toggle="tooltip">
                       {{ _("0 sec") }}
                     </span>
-                    <div class="btn-group results" role="group">
-                      <a role="button" tabindex="0" class="btn btn-default btn-sm" id="shortner" data-toggle="popover" data-trigger="focus">
-                        <i class="fa fa-link" data-toggle="tooltip" title="{{ _("Short URL") }}"></i>&nbsp;
-                      </a>
-                      <span class="btn btn-default btn-sm" id="standalone" title="{{ _("Generate an embeddable iframe") }}" data-toggle="tooltip">
-                        <i class="fa fa-code"></i>&nbsp;
-                      </span>
-                      <span class="btn btn-default btn-sm" id="json" title="{{ _("Export to .json")}}" data-toggle="tooltip">
-                        <i class="fa fa-file-code-o"></i>
-                        .json
-                      </span>
-                      <span class="btn btn-default btn-sm {{ "disabled disabledButton" if not can_download }}" id="csv" title="{{ _("Export to .csv format") }}" data-toggle="tooltip">
-                        <i class="fa fa-file-text-o"></i>.csv
-                      </span>
-                      <span
-                        class="btn btn-default btn-sm disabled view_query"
-                        data-toggle="modal"
-                        data-target="#query_modal">
-                        <span data-toggle="tooltip" title="{{ _("View database query") }}">
-                          {{ _("query") }}
-                        </span>
-                      </span>
-                      <span
-                        class="btn btn-warning btn-sm notbtn"
-                        id="timer"
-                        title="{{ _("Query timer") }}"
-                        data-toggle="tooltip">
-                        {{ _("0 sec") }}
-                      </span>
-                    </div>
+
+                    <span
+                      id="js-explore-actions"
+                      data-can-download="{{can_download}}"
+                    >
+                    </span>
                   </div>
                 </div>
               </div>
@@ -249,24 +228,7 @@
           </div>
         </div>
       </div>
-      <div class="modal fade" id="query_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
-        <div class="modal-dialog" role="document">
-          <div class="modal-content">
-            <div class="modal-header">
-              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-              </button>
-              <h4 class="modal-title">{{ _("Query") }}</h4>
-            </div>
-            <div class="modal-body">
-              <pre id="query_container"></pre>
-            </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-default" data-dismiss="modal">{{ _("Close") }}</button>
-            </div>
-          </div>
-        </div>
-      </div>
+
       <div class="modal fade" id="sourceinfo_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
         <div class="modal-dialog modal-lg" role="document">
           <div class="modal-content">
@@ -339,5 +301,7 @@
 
 {% block tail_js %}
   {{ super() }}
-  <script src="/static/assets/dist/explore.entry.js"></script>
+  {% with filename="explore" %}
+    {% include "caravel/partials/_script_tag.html" %}
+  {% endwith %}
 {% endblock %}

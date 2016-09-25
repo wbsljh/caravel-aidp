@@ -82,6 +82,32 @@ function dashboardContainer(dashboardData) {
     setFilter(sliceId, col, vals, refresh) {
       this.addFilter(sliceId, col, vals, false, refresh);
     },
+    effectiveExtraFilters(sliceId) {
+      // Summarized filter, not defined by sliceId
+      // returns k=field, v=array of values
+      const f = {};
+      if (sliceId && this.metadata.filter_immune_slices.includes(sliceId)) {
+        // The slice is immune to dashboard fiterls
+        return f;
+      }
+
+      // Building a list of fields the slice is immune to filters on
+      let immuneToFields = [];
+      if (
+            sliceId &&
+            this.metadata.filter_immune_slice_fields &&
+            this.metadata.filter_immune_slice_fields[sliceId]) {
+        immuneToFields = this.metadata.filter_immune_slice_fields[sliceId];
+      }
+      for (const filteringSliceId in this.filters) {
+        for (const field in this.filters[filteringSliceId]) {
+          if (!immuneToFields.includes(field)) {
+            f[field] = this.filters[filteringSliceId][field];
+          }
+        }
+      }
+      return f;
+    },
     addFilter(sliceId, col, vals, merge = true, refresh = true) {
       if (!(sliceId in this.filters)) {
         this.filters[sliceId] = {};
@@ -154,7 +180,7 @@ function dashboardContainer(dashboardData) {
     refreshExcept(sliceId) {
       const immune = this.metadata.filter_immune_slices || [];
       this.slices.forEach(function (slice) {
-        if (slice.data.slice_id !== sliceId && immune.indexOf(slice.data.sliceId) === -1) {
+        if (slice.data.slice_id !== sliceId && immune.indexOf(slice.data.slice_id) === -1) {
           slice.render();
         }
       });

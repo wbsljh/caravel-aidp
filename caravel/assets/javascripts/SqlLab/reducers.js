@@ -1,6 +1,8 @@
 import shortid from 'shortid';
 import * as actions from './actions';
 import { now } from '../modules/dates';
+import { addToObject, alterInObject, alterInArr, removeFromArr, getFromArr, addToArr }
+  from '../reduxUtils.js';
 
 const defaultQueryEditor = {
   id: shortid.generate(),
@@ -14,65 +16,15 @@ const defaultQueryEditor = {
 // TODO(bkyryliuk): document the object schemas
 export const initialState = {
   alerts: [],
+  networkOn: true,
   queries: {},
+  databases: {},
   queryEditors: [defaultQueryEditor],
   tabHistory: [defaultQueryEditor.id],
   tables: [],
   workspaceQueries: [],
   queriesLastUpdate: 0,
 };
-
-function addToObject(state, arrKey, obj) {
-  const newObject = Object.assign({}, state[arrKey]);
-  const copiedObject = Object.assign({}, obj);
-
-  if (!copiedObject.id) {
-    copiedObject.id = shortid.generate();
-  }
-  newObject[copiedObject.id] = copiedObject;
-  return Object.assign({}, state, { [arrKey]: newObject });
-}
-
-function alterInObject(state, arrKey, obj, alterations) {
-  const newObject = Object.assign({}, state[arrKey]);
-  newObject[obj.id] = (Object.assign({}, newObject[obj.id], alterations));
-  return Object.assign({}, state, { [arrKey]: newObject });
-}
-
-function alterInArr(state, arrKey, obj, alterations) {
-  // Finds an item in an array in the state and replaces it with a
-  // new object with an altered property
-  const idKey = 'id';
-  const newArr = [];
-  state[arrKey].forEach((arrItem) => {
-    if (obj[idKey] === arrItem[idKey]) {
-      newArr.push(Object.assign({}, arrItem, alterations));
-    } else {
-      newArr.push(arrItem);
-    }
-  });
-  return Object.assign({}, state, { [arrKey]: newArr });
-}
-
-function removeFromArr(state, arrKey, obj, idKey = 'id') {
-  const newArr = [];
-  state[arrKey].forEach((arrItem) => {
-    if (!(obj[idKey] === arrItem[idKey])) {
-      newArr.push(arrItem);
-    }
-  });
-  return Object.assign({}, state, { [arrKey]: newArr });
-}
-
-function addToArr(state, arrKey, obj) {
-  const newObj = Object.assign({}, obj);
-  if (!newObj.id) {
-    newObj.id = shortid.generate();
-  }
-  const newState = {};
-  newState[arrKey] = [...state[arrKey], newObj];
-  return Object.assign({}, state, newState);
-}
 
 export const sqlLabReducer = function (state, action) {
   const actionHandlers = {
@@ -86,9 +38,16 @@ export const sqlLabReducer = function (state, action) {
       let newState = removeFromArr(state, 'queryEditors', action.queryEditor);
       // List of remaining queryEditor ids
       const qeIds = newState.queryEditors.map((qe) => qe.id);
-      let th = state.tabHistory.slice();
-      th = th.filter((id) => qeIds.includes(id));
-      newState = Object.assign({}, newState, { tabHistory: th });
+      const queries = {};
+      Object.keys(state.queries).forEach((k) => {
+        const query = state.queries[k];
+        if (qeIds.includes(query.sqlEditorId)) {
+          queries[k] = query;
+        }
+      });
+      let tabHistory = state.tabHistory.slice();
+      tabHistory = tabHistory.filter((id) => qeIds.includes(id));
+      newState = Object.assign({}, newState, { tabHistory, queries });
       return newState;
     },
     [actions.REMOVE_QUERY]() {
@@ -112,7 +71,14 @@ export const sqlLabReducer = function (state, action) {
       return removeFromArr(state, 'tables', action.table);
     },
     [actions.START_QUERY]() {
-      const newState = addToObject(state, 'queries', action.query);
+      const qe = getFromArr(state.queryEditors, action.query.sqlEditorId);
+      let newState = Object.assign({}, state);
+      if (qe.latestQueryId) {
+        const q = Object.assign({}, state.queries[qe.latestQueryId], { results: null });
+        const queries = Object.assign({}, state.queries, { [q.id]: q });
+        newState = Object.assign({}, state, { queries });
+      }
+      newState = addToObject(newState, 'queries', action.query);
       const sqlEditor = { id: action.query.sqlEditorId };
       return alterInArr(newState, 'queryEditors', sqlEditor, { latestQueryId: action.query.id });
     },
@@ -120,17 +86,21 @@ export const sqlLabReducer = function (state, action) {
       return alterInObject(state, 'queries', action.query, { state: 'stopped' });
     },
     [actions.QUERY_SUCCESS]() {
+      let rows;
+      if (action.results.data) {
+        rows = action.results.data.length;
+      }
       const alts = {
-        state: 'success',
-        results: action.results,
-        rows: action.results.data.length,
-        progress: 100,
         endDttm: now(),
+        progress: 100,
+        results: action.results,
+        rows,
+        state: 'success',
       };
       return alterInObject(state, 'queries', action.query, alts);
     },
     [actions.QUERY_FAILED]() {
-      const alts = { state: 'failed', msg: action.msg, endDttm: now() };
+      const alts = { state: 'failed', errorMessage: action.msg, endDttm: now() };
       return alterInObject(state, 'queries', action.query, alts);
     },
     [actions.SET_ACTIVE_QUERY_EDITOR]() {
@@ -157,23 +127,40 @@ export const sqlLabReducer = function (state, action) {
     [actions.QUERY_EDITOR_SET_AUTORUN]() {
       return alterInArr(state, 'queryEditors', action.queryEditor, { autorun: action.autorun });
     },
-    [actions.ADD_WORKSPACE_QUERY]() {
-      return addToArr(state, 'workspaceQueries', action.query);
-    },
-    [actions.REMOVE_WORKSPACE_QUERY]() {
-      return removeFromArr(state, 'workspaceQueries', action.query);
-    },
     [actions.ADD_ALERT]() {
       return addToArr(state, 'alerts', action.alert);
+    },
+    [actions.SET_DATABASES]() {
+      const databases = {};
+      action.databases.forEach((db) => {
+        databases[db.id] = db;
+      });
+      return Object.assign({}, state, { databases });
     },
     [actions.REMOVE_ALERT]() {
       return removeFromArr(state, 'alerts', action.alert);
     },
+    [actions.SET_NETWORK_STATUS]() {
+      if (state.networkOn !== action.networkOn) {
+        return Object.assign({}, state, { networkOn: action.networkOn });
+      }
+      return state;
+    },
     [actions.REFRESH_QUERIES]() {
-      const newQueries = Object.assign({}, state.queries);
+      let newQueries = Object.assign({}, state.queries);
       // Fetch the updates to the queries present in the store.
-      for (const queryId in state.queries) {
-        newQueries[queryId] = Object.assign(newQueries[queryId], action.alteredQueries[queryId]);
+      let change = false;
+      for (const id in action.alteredQueries) {
+        const changedQuery = action.alteredQueries[id];
+        if (
+            !state.queries.hasOwnProperty(id) ||
+            state.queries[id].changedOn !== changedQuery.changedOn) {
+          newQueries[id] = Object.assign({}, state.queries[id], changedQuery);
+          change = true;
+        }
+      }
+      if (!change) {
+        newQueries = state.queries;
       }
       const queriesLastUpdate = now();
       return Object.assign({}, state, { queries: newQueries, queriesLastUpdate });

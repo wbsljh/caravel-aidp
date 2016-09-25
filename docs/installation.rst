@@ -108,6 +108,10 @@ load balancer knows if your caravel instance is running. This is provided
 at ``/health`` which will return a 200 response containing "OK" if the
 webserver is running.
 
+If the load balancer is inserting X-Forwarded-For/X-Forwarded-Proto headers, you
+should set `ENABLE_PROXY_FIX = True` in the caravel config file to extract and use
+the headers.
+
 
 Configuration
 -------------
@@ -294,6 +298,25 @@ Upgrading should be as straightforward as running::
     pip install caravel --upgrade
     caravel db upgrade
 
+SQL Lab
+-------
+SQL Lab is a powerful SQL IDE that works with all SQLAlchemy compatible
+databases out there. By default, queries are run in a web request, and
+may eventually timeout as queries exceed the maximum duration of a web
+request in your environment, whether it'd be a reverse proxy or the Caravel
+server itself.
+
+In the modern analytics world, it's not uncommon to run large queries that
+run for minutes or hours.
+To enable support for long running queries that
+execute beyond the typical web request's timeout (30-60 seconds), it is
+necessary to deploy an asynchronous backend, which consist of one or many
+Caravel worker, which is implemented as a Celery worker, and a Celery
+broker for which we recommend using Redis or RabbitMQ.
+
+It's also preferable to setup an async result backend as a key value store
+that can hold the long-running query results for a period of time. More
+details to come as to how to set this up here soon.
 
 Making your own build
 ---------------------
