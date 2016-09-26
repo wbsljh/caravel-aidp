@@ -236,7 +236,7 @@ DEFAULT_DB_ID = None
 SQLLAB_TIMEOUT = 30
 
 try:
-    from caravel_config import *  # noqa
+    from .caravel_config import *  # noqa
 except ImportError:
     pass
 
