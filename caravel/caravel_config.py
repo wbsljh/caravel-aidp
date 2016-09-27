@@ -64,4 +64,4 @@ CAS_AFTER_LOGIN = 'CustomAuthDBView.cas'
 CAS_AFTER_LOGOUT_TEMP = 'CustomAuthDBView.cas_logout'
 
 # config to use cas auth
-CUSTOM_SECURITY_MANAGER = CustomSecurityManager
+# CUSTOM_SECURITY_MANAGER = CustomSecurityManager
