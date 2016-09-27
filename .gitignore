@@ -22,9 +22,9 @@ app.db
 *.sqllite
 
 # Node.js, webpack artifacts
-*.entry.js
-*.js.map
-node_modules
+#*.entry.js
+#*.js.map
+#node_modules
 npm-debug.log
 .pydevproject
 .project
