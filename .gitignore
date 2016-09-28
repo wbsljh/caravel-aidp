@@ -24,7 +24,7 @@ app.db
 # Node.js, webpack artifacts
 #*.entry.js
 #*.js.map
-#node_modules
+node_modules
 npm-debug.log
 .pydevproject
 .project
