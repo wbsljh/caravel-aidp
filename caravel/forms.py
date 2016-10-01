@@ -961,6 +961,13 @@ class FormFactory(object):
                 ],
                 "description": _("The color for points and clusters in RGB")
             }),
+            'options': (TextAreaField, {
+                "label": _("echart options"),
+                "default": "",
+                "description": _(
+                    "echart options"
+                    )
+            }),
         }
 
         # Override default arguments with form overrides

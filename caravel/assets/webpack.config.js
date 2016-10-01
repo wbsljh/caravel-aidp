@@ -12,13 +12,13 @@ const VERSION_STRING = JSON.parse(fs.readFileSync('package.json')).version;
 
 const config = {
   entry: {
-    'css-theme': APP_DIR + '/javascripts/css-theme.js',
+    //'css-theme': APP_DIR + '/javascripts/css-theme.js',
     dashboard: APP_DIR + '/javascripts/dashboard/Dashboard.jsx',
     explore: APP_DIR + '/javascripts/explore/explore.jsx',
-    welcome: APP_DIR + '/javascripts/welcome.js',
+    //welcome: APP_DIR + '/javascripts/welcome.js',
     standalone: APP_DIR + '/javascripts/standalone.js',
-    common: APP_DIR + '/javascripts/common.js',
-    sqllab: APP_DIR + '/javascripts/SqlLab/index.jsx',
+    //common: APP_DIR + '/javascripts/common.js',
+    //sqllab: APP_DIR + '/javascripts/SqlLab/index.jsx',
   },
   output: {
     path: BUILD_DIR,
