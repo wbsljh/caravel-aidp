@@ -1973,7 +1973,9 @@ appbuilder.add_view(
 
 class EchartMapTypeModelView(CaravelModelView, DeleteMixin):
     datamodel = SQLAInterface(models.EchartMapType)
-    list_columns = ['map_name', 'file']
+    label_columns = {'file_name': 'File Name', 'download': 'Download'}
+    list_columns = ['map_name', 'file', 'file_name', 'download']
+    show_columns = ['map_name', 'file', 'file_name', 'download']
     edit_columns = ['map_name', 'file']
     add_columns = edit_columns
 

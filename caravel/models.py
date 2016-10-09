@@ -22,6 +22,7 @@ from sqlalchemy.engine.url import make_url
 import sqlparse
 from dateutil.parser import parse
 
+from flask import Markup, url_for
 from flask import escape, g, Markup, request
 from flask_appbuilder import Model
 from flask_appbuilder.models.mixins import AuditMixin, FileColumn
