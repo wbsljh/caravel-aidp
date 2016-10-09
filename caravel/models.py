@@ -24,8 +24,10 @@ from dateutil.parser import parse
 
 from flask import escape, g, Markup, request
 from flask_appbuilder import Model
-from flask_appbuilder.models.mixins import AuditMixin
+from flask_appbuilder.models.mixins import AuditMixin, FileColumn
 from flask_appbuilder.models.decorators import renders
+from flask_appbuilder.filemanager import get_file_original_name
+
 from flask_babel import lazy_gettext as _
 
 from pydruid.client import PyDruid
@@ -2086,3 +2088,19 @@ class DatasourceAccessRequest(Model, AuditMixinNullable):
                 href = "{} Role".format(r.name)
             action_list = action_list + '<li>' + href + '</li>'
         return '<ul>' + action_list + '</ul>'
+
+class EchartMapType(Model):
+    """
+    the map tile file object!
+    """
+    __tablename__ = "echart_map_type"
+    id = Column(Integer, primary_key=True)
+    file = Column(FileColumn, nullable=False)
+    map_name = Column(String(150))
+
+    def download(self):
+        return Markup(
+            '<a href="' + url_for('EchartMapTypeModelView.download', filename=str(self.file)) + '">Download</a>')
+
+    def file_name(self):
+        return get_file_original_name(str(self.file))

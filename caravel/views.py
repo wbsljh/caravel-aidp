@@ -1971,6 +1971,21 @@ appbuilder.add_view(
     category_label=__("Sources"),
     category_icon='')
 
+class EchartMapTypeModelView(CaravelModelView, DeleteMixin):
+    datamodel = SQLAInterface(models.EchartMapType)
+    list_columns = ['map_name', 'file']
+    edit_columns = ['map_name', 'file']
+    add_columns = edit_columns
+
+appbuilder.add_view(
+    EchartMapTypeModelView,
+    "EchartMapType",
+    label=__("EchartMapType"),
+    icon="fa-css3",
+    category="Sources",
+    category_label=__("Sources"),
+    category_icon='')
+
 appbuilder.add_link(
     'SQL Editor',
     href='/caravel/sqllab',
