@@ -16,8 +16,8 @@ const config = {
     dashboard: APP_DIR + '/javascripts/dashboard/Dashboard.jsx',
     explore: APP_DIR + '/javascripts/explore/explore.jsx',
     //welcome: APP_DIR + '/javascripts/welcome.js',
-    standalone: APP_DIR + '/javascripts/standalone.js',
-    //common: APP_DIR + '/javascripts/common.js',
+    //standalone: APP_DIR + '/javascripts/standalone.js',
+    common: APP_DIR + '/javascripts/common.js',
     //sqllab: APP_DIR + '/javascripts/SqlLab/index.jsx',
   },
   output: {
