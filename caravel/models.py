@@ -2105,3 +2105,7 @@ class EchartMapType(Model):
 
     def file_name(self):
         return get_file_original_name(str(self.file))
+    
+    @property
+    def map_url(self):
+        return url_for('EchartMapTypeModelView.download', filename=str(self.file))

@@ -18,10 +18,13 @@ function Ec3BarLinePieWidget(slice) {
         let xaxis_data = [];
 
         //
-        let groupby = payload.form_data.groupby[0]
+        let groupby = "";
+        if ('groupby' in payload.form_data && payload.form_data.groupby != null && payload.form_data.groupby.length > 0){
+          groupby = payload.form_data.groupby[0];
+        }
         let all_columns = payload.form_data.all_columns
         let metrics = payload.form_data.metrics
-        if (all_columns.length > 0) {
+        if (all_columns != null && all_columns.length > 0) {
           groupby = all_columns[0];
           metrics = all_columns;
           console.log('before splice :' + metrics);
@@ -37,30 +40,37 @@ function Ec3BarLinePieWidget(slice) {
         for (let i = 0; i < chart_options.series.length; i++) {
           let metric = metrics[i]
           let serie_data = [];
-          payload.data.records.forEach((d) => {
-            const name = d[groupby];
-            const value = d[metric];
-            let _item = {
-              name,
-              value
-            };
-            serie_data.push(_item);
-          });
+
           console.log('serie ' + i + serie_data);
-          if (!('name' in chart_options.series[i])){
+          if (!('name' in chart_options.series[i])) {
             chart_options.series[i].name = metric;
           }
-          chart_options.series[i].data = serie_data;
+          //if chart_options.series have not set the data
+          if (!('data' in chart_options.series[i] && chart_options.series[i].data.length > 0)) {
+            payload.data.records.forEach((d) => {
+              const name = d[groupby];
+              const value = d[metric];
+              let _item = {
+                name,
+                value
+              };
+              serie_data.push(_item);
+            });
+            chart_options.series[i].data = serie_data;
+          }
         };
-        console.log('legend' in chart_options);
+
         if ('legend' in chart_options) {
-          if (!('data' in chart_options.legend.data &&chart_options.legend.data.length > 0)) {
-              chart_options.legend.data = legend_data;
-          } 
+          if (!('data' in chart_options.legend && chart_options.legend.data.length > 0)) {
+            chart_options.legend.data = legend_data;
+          }
         }
+
         if ('xAxis' in chart_options) {
           //TODO consider more than one
-          chart_options.xAxis[0].data = xaxis_data;
+          if (!('data' in chart_options.xAxis[0] && chart_options.xAxis[0].data > 0)) {
+            chart_options.xAxis[0].data = xaxis_data;
+          }
         }
 
         console.log('chart_options: \n' + JSON.stringify(chart_options));

@@ -14,7 +14,7 @@ tmp
 #caravel_config.py
 local_config.py
 env
-/dist/
+dist/
 caravel.egg-info/
 app.db
 *.bak
@@ -22,11 +22,13 @@ app.db
 *.sqllite
 
 # Node.js, webpack artifacts
-#*.entry.js
-#*.js.map
+*.entry.js
+*.js.map
 /caravel/assets/node_modules/*
 !/caravel/assets/node_modules/font-awesome
+!/caravel/assets/node_modules/echarts-2.2.7
 npm-debug.log
 .pydevproject
 .project
 .settings/
+/caravel/app/static/uploads/*
