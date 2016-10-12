@@ -29,7 +29,7 @@ from werkzeug.datastructures import ImmutableMultiDict, MultiDict
 from werkzeug.urls import Href
 from dateutil import relativedelta as rdelta
 
-from caravel import app, utils, cache
+from caravel import app, utils, cache, db
 from caravel.forms import FormFactory
 from caravel.utils import flasher
 
@@ -2028,7 +2028,8 @@ class Ec3BarLinePieViz(BaseViz):
         if fd.get('all_columns'):
             d['columns'] = fd.get('all_columns')
             d['groupby'] = []
-            d['orderby'] = [json.loads(t) for t in fd.get('order_by_cols', [])]
+            if fd.get('order_by_cols', []):
+                d['orderby'] = [json.loads(t) for t in fd.get('order_by_cols', [])]
         return d
 
     def get_df(self, query_obj=None):
@@ -2068,7 +2069,7 @@ class Ec3Map(BaseViz):
         'label': _("Options"),
         'description': _('echart options'),
         'fields': (
-            'custom_map', 'options',
+            'custom_map', 'options'
         )
     })
     form_overrides = ({
@@ -2077,6 +2078,15 @@ class Ec3Map(BaseViz):
         },
     })
     is_timeseries = False
+
+    def __init__(self, datasource, form_data, slice_=None):
+        super(Ec3Map, self).__init__(datasource, form_data, slice_)
+        fd = self.form_data
+        if fd.get('custom_map'):
+            from caravel import models
+            custom_map = db.session.query(models.EchartMapType)\
+            .filter_by(map_name = fd.get('custom_map')).first()
+            self.form_data["custom_map_url"] = custom_map.map_url
 
     def query_obj(self):
         d = super(Ec3Map, self).query_obj()
@@ -2088,7 +2098,8 @@ class Ec3Map(BaseViz):
         if fd.get('all_columns'):
             d['columns'] = fd.get('all_columns')
             d['groupby'] = []
-            d['orderby'] = [json.loads(t) for t in fd.get('order_by_cols', [])]
+            if fd.get('order_by_cols', []):
+                d['orderby'] = [json.loads(t) for t in fd.get('order_by_cols', [])]
         return d
 
     def get_df(self, query_obj=None):

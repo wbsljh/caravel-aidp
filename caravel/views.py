@@ -1111,8 +1111,8 @@ class Caravel(BaseCaravelView):
             session.delete(r)
         session.commit()
         return redirect('/accessrequestsmodelview/list/')
-
-    @has_access
+    # modify by ljh 20161011
+    # @has_access
     @expose("/explore/<datasource_type>/<datasource_id>/<slice_id>/")
     @expose("/explore/<datasource_type>/<datasource_id>/")
     @expose("/datasource/<datasource_type>/<datasource_id>/")  # Legacy url
@@ -1128,12 +1128,12 @@ class Caravel(BaseCaravelView):
         if not datasource:
             flash(DATASOURCE_MISSING_ERR, "alert")
             return redirect(error_redirect)
-
-        if not self.datasource_access(datasource):
-            flash(
-                __(get_datasource_access_error_msg(datasource.name)), "danger")
-            return redirect('caravel/request_access_form/{}/{}/{}'.format(
-                datasource_type, datasource_id, datasource.name))
+        # modify by ljh 20161011
+        # if not self.datasource_access(datasource):
+        #     flash(
+        #         __(get_datasource_access_error_msg(datasource.name)), "danger")
+        #     return redirect('caravel/request_access_form/{}/{}/{}'.format(
+        #         datasource_type, datasource_id, datasource.name))
 
         request_args_multi_dict = request.args  # MultiDict
 
@@ -1167,7 +1167,10 @@ class Caravel(BaseCaravelView):
 
         # slc perms
         slice_add_perm = self.can_access('can_add', 'SliceModelView')
-        slice_edit_perm = check_ownership(slc, raise_if_false=False)
+        # modify by ljh 20161011
+        # slice_edit_perm = check_ownership(slc, raise_if_false=False)
+        slice_edit_perm = hasattr(g.user, 'username') and check_ownership(slc, raise_if_false=False)
+
         slice_download_perm = self.can_access('can_download', 'SliceModelView')
 
         # handle save or overwrite
@@ -1535,6 +1538,33 @@ class Caravel(BaseCaravelView):
         dash_save_perm = dash_edit_perm and self.can_access('can_save_dash', 'Caravel')
         return self.render_template(
             "caravel/dashboard.html", dashboard=dash,
+            user_id=g.user.get_id(),
+            templates=templates,
+            dash_save_perm=dash_save_perm,
+            dash_edit_perm=dash_edit_perm)
+
+    @expose("/dashboard_read/<dashboard_id>/")
+    def dashboard_read(self, dashboard_id):
+        """Server side rendering for a dashboard"""
+        session = db.session()
+        qry = session.query(models.Dashboard)
+        if dashboard_id.isdigit():
+            qry = qry.filter_by(id=int(dashboard_id))
+        else:
+            qry = qry.filter_by(slug=dashboard_id)
+
+        templates = session.query(models.CssTemplate).all()
+        dash = qry.first()
+
+        # Hack to log the dashboard_id properly, even when getting a slug
+        @log_this
+        def dashboard(**kwargs):  # noqa
+            pass
+        dashboard(dashboard_id=dash.id)
+        dash_edit_perm = False
+        dash_save_perm = False
+        return self.render_template(
+            "caravel/dashboard_read.html", dashboard=dash,
             user_id=g.user.get_id(),
             templates=templates,
             dash_save_perm=dash_save_perm,

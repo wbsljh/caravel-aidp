@@ -12,7 +12,7 @@ import math
 from flask_babel import lazy_gettext as _
 from wtforms import (
     Form, SelectMultipleField, SelectField, TextField, TextAreaField,
-    BooleanField, IntegerField, HiddenField, DecimalField, FileField)
+    BooleanField, IntegerField, HiddenField, DecimalField)
 from wtforms import validators, widgets
 
 from caravel import app
@@ -968,7 +968,7 @@ class FormFactory(object):
                     "echart options"
                     )
             }),
-            'custom_map': (FileField, {
+            'custom_map': (TextField, {
                 "label": _("custom map path"),
                 "default": "",
                 "description": _("custom map path")
