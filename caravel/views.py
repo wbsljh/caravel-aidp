@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -1555,7 +1556,18 @@ class Caravel(BaseCaravelView):
 
         templates = session.query(models.CssTemplate).all()
         dash = qry.first()
+        import pdb
+        pdb.set_trace()
+        # 增加readonly参数
+        for slice in dash.slices:
+            slice_params = json.loads(slice.params)
+            print(slice_params)
+            slice_params['readonly'] = 'true'
+            print(slice_params)
+            slice.params = json.dumps(slice_params)
 
+        import pdb
+        pdb.set_trace()
         # Hack to log the dashboard_id properly, even when getting a slug
         @log_this
         def dashboard(**kwargs):  # noqa
