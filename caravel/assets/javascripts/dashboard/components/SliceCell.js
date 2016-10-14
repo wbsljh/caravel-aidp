@@ -14,6 +14,7 @@ function SliceCell({ expandedSlices, removeSlice, slice }) {
           <div className="col-md-12 header">
             <span>{slice.slice_name}</span>
           </div>
+          {slice.form_data.readonly != 'true' &&
           <div className="col-md-12 chart-controls">
             <div className="pull-right">
               <a title="Move chart" data-toggle="tooltip">
@@ -52,7 +53,7 @@ function SliceCell({ expandedSlices, removeSlice, slice }) {
                 />
               </a>
             </div>
-          </div>
+          </div>}
 
         </div>
       </div>

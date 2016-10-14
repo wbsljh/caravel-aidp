@@ -53,6 +53,7 @@ class BaseViz(object):
     form_overrides = {}
 
     def __init__(self, datasource, form_data, slice_=None):
+        self.url_prefix = '/caravel/explore'
         self.orig_form_data = form_data
         if not datasource:
             raise Exception("Viz is missing a datasource")
@@ -140,7 +141,7 @@ class BaseViz(object):
                 od.add(key, item)
 
         href = Href(
-            '/caravel/explore/{self.datasource.type}/'
+            '{self.url_prefix}/{self.datasource.type}/'
             '{self.datasource.id}/'.format(**locals()))
         if for_cache_key and 'force' in od:
             del od['force']
