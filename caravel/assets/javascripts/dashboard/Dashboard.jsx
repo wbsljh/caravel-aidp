@@ -301,7 +301,7 @@ function dashboardContainer(dashboardData) {
 
       this.reactGridLayout = render(
         <GridLayout slices={this.slices} posDict={this.posDict} dashboard={dashboard} />,
-        document.getElementById('grid-container')
+        ldocument.getElementById('grid-container')
       );
 
       this.curUserId = $('.dashboard').data('user');
