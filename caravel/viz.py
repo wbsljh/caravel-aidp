@@ -2121,9 +2121,9 @@ class Ec3MapViz(Ec3Viz):
         fd = self.form_data
         if fd.get('custom_map'):
             from caravel import models
-            custom_map = db.session.query(models.EchartMapType)\
-            .filter_by(map_name = fd.get('custom_map')).first()
-            self.form_data["custom_map_url"] = custom_map.map_url
+            custom_map = db.session.query(models.Resource)\
+            .filter_by(name = fd.get('custom_map')).first()
+            self.form_data["custom_map_url"] = custom_map.url
 
 
 viz_types_list = [

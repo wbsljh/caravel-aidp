@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """A collection of ORM sqlalchemy models for Caravel"""
 from __future__ import absolute_import
 from __future__ import division
@@ -2090,22 +2091,36 @@ class DatasourceAccessRequest(Model, AuditMixinNullable):
             action_list = action_list + '<li>' + href + '</li>'
         return '<ul>' + action_list + '</ul>'
 
-class EchartMapType(Model):
+
+class ResourceCategory(Model):
     """
-    the map tile file object!
+    资源文件分类
     """
-    __tablename__ = "echart_map_type"
+    __tablename__ = "ai_resource_category"
     id = Column(Integer, primary_key=True)
-    file = Column(FileColumn, nullable=False)
-    map_name = Column(String(150))
+    name = Column(String(150), nullable=False)
+
+    def __repr__(self):
+        return self.name
+
+class Resource(Model):
+    """
+    资源文件
+    """
+    __tablename__ = "ai_resource"
+    id = Column(Integer, primary_key = True)
+    file = Column(FileColumn, nullable = False)
+    name = Column(String(150), nullable = False)
+    category_id = Column(Integer, ForeignKey('ai_resource_category.id'))
+    category = relationship('ResourceCategory', backref='resources', foreign_keys=[category_id])
 
     def download(self):
         return Markup(
-            '<a href="' + url_for('EchartMapTypeModelView.download', filename=str(self.file)) + '">Download</a>')
+            '<a href="' + url_for('ResourceModelView.download', filename=str(self.file)) + '">Download</a>')
 
     def file_name(self):
         return get_file_original_name(str(self.file))
     
     @property
-    def map_url(self):
-        return url_for('EchartMapTypeModelView.download', filename=str(self.file))
+    def url(self):
+        return url_for('ResourceModelView.download', filename=str(self.file), _external = True)
