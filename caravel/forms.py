@@ -1,3 +1,4 @@
+#coding=utf-8
 """Contains the logic to create cohesive forms on the explore view"""
 from __future__ import absolute_import
 from __future__ import division
@@ -962,16 +963,31 @@ class FormFactory(object):
                 "description": _("The color for points and clusters in RGB")
             }),
             'options': (TextAreaField, {
-                "label": _("echart options"),
+                "label": _("Echart Options"),
                 "default": "",
                 "description": _(
-                    "echart options"
+                    "Echart Options"
                     )
             }),
             'custom_map': (TextField, {
-                "label": _("custom map path"),
+                "label": _("svg资源名称"),
                 "default": "",
-                "description": _("custom map path")
+                "description": _("svg资源文件名称, 如:fuzhou")
+            }),
+            'dimensions': (SelectMultipleSortableField, {
+                "label": _("维度"),
+                "choices": self.choicify(datasource.groupby_column_names),
+                "description": _("选择一个字段作为图表维度，如果没有选项，请到数据源配置页面将groupable选项打勾")
+            }),
+            'is_groupby': (BetterBooleanField, {
+                "label": _("是否Group By"),
+                "default": False,
+                "description": "如选是，则sql语句会根据维度字段进行group by聚合"
+            }),
+            'hide_slice_title': (BetterBooleanField, {
+                "label": _("隐藏切片标题"),
+                "default": False,
+                "description": "隐藏切片标题"
             })
         }
 

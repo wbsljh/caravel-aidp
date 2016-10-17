@@ -30,7 +30,7 @@ from werkzeug.urls import Href
 from dateutil import relativedelta as rdelta
 
 from caravel import app, utils, cache, db
-from caravel.forms import FormFactory
+from caravel.forms import FormFactory, SelectMultipleSortableField
 from caravel.utils import flasher
 
 config = app.config
@@ -1990,51 +1990,56 @@ class MapboxViz(BaseViz):
             "color": fd.get("mapbox_color"),
         }
 
-class Ec3BarLinePieViz(BaseViz):
-
-    """A basic html table that is sortable and searchable"""
-
-    viz_type = "ec3_barlinepie"
-    verbose_name = _("Ec3_BarLinePie_Viz")
-    credits = ''
+class Ec3Viz(BaseViz):
     fieldsets = ({
-        'label': _("GROUP BY"),
-        'description': _('查询需要用到group by聚合语句'),
-        'fields': ('groupby', 'metrics')
+        'label': _("数据查询参数"),
+        'description': _('数据查询相关参数'),
+        'fields': (
+            'is_groupby', 'dimensions', 'metrics', 'order_by_cols',
+        )
     }, {
-        'label': _("NOT GROUPED BY"),
-        'description': _('查询原始记录不做group by聚合'),
-        'fields': ('all_columns', 'order_by_cols'),
+        'label': _("切片参数设置"),
+        'description': _('切片参数设置'),
+        'fields': (
+            'hide_slice_title',
+        )
     }, {
-        'label': _("Options"),
-        'description': _('echart options'),
+        'label': _("Echart Options参数设置"),
+        'description': _('Echart Options参数设置'),
         'fields': (
             'options',
         )
     })
+
+    is_timeseries = False
+
     form_overrides = ({
         'metrics': {
             'default': [],
         },
     })
-    is_timeseries = False
 
     def query_obj(self):
-        d = super(Ec3BarLinePieViz, self).query_obj()
+        d = super(Ec3Viz, self).query_obj()
         fd = self.form_data
-        if fd.get('all_columns') and (fd.get('groupby') or fd.get('metrics')):
-            raise Exception(
-                "Choose either fields to [Group By] and [Metrics] or "
-                "[Columns], not both")
-        if fd.get('all_columns'):
-            d['columns'] = fd.get('all_columns')
-            d['groupby'] = []
-            if fd.get('order_by_cols', []):
-                d['orderby'] = [json.loads(t) for t in fd.get('order_by_cols', [])]
+        if fd.get('is_groupby') and fd.get('metrics')\
+         <= [c[1] for c in self.datasource.metrics_combo]:
+            flasher("Group By查询必须选择聚合字段作为度量指标，如:max_,min_,sum_开头字段", "danger")
+
+        if fd.get('is_groupby'):
+            d['groupby'] = fd.get('dimensions')
+        else:
+            d['columns'] = (fd.get('dimensions') if fd.get('dimensions') else []) +\
+             (fd.get('metrics') if fd.get('metrics') else [])
+            d['metrics'] = []      
+        
+        if fd.get('order_by_cols', []):
+            d['orderby'] = [json.loads(t) for t in fd.get('order_by_cols', [])]
+    
         return d
 
     def get_df(self, query_obj=None):
-        df = super(Ec3BarLinePieViz, self).get_df(query_obj)
+        df = super(Ec3Viz, self).get_df(query_obj)
         if (
                 self.form_data.get("granularity") == "all" and
                 'timestamp' in df):
@@ -2051,79 +2056,80 @@ class Ec3BarLinePieViz(BaseViz):
     def json_dumps(self, obj):
         return json.dumps(obj, default=utils.json_iso_dttm_ser)
 
-class Ec3Map(BaseViz):
+
+class Ec3BarLineViz(Ec3Viz):
+
+    """A basic html table that is sortable and searchable"""
+
+    viz_type = "ec3_barline"
+    verbose_name = _("Ec3_BarLine_Viz")
+    credits = ''
+    is_timeseries = False
+
+    def __init__(self, datasource, form_data, slice_=None):
+        self.form_overrides = ({
+            'metrics': ({
+                "label": _("Metrics"),
+                "choices": FormFactory.choicify(datasource.column_names) + datasource.metrics_combo,
+                "default": [],
+                "description": _("One or many metrics to display")
+            })
+        })
+        super(Ec3BarLineViz, self).__init__(datasource, form_data, slice_)
+
+class Ec3PieViz(Ec3Viz):
+
+    viz_type = "ec3_pie"
+    verbose_name = _("Ec3_Pie_Viz")
+    credits = ''
+    is_timeseries = False
+
+    def __init__(self, datasource, form_data, slice_=None):
+        self.form_overrides = ({
+            'metrics': ({
+                    "label": _("Metrics"),
+                    "choices": FormFactory.choicify(datasource.column_names) + datasource.metrics_combo,
+                    "default": [],
+                    "description": _("One or many metrics to display")
+                })
+        })
+        super(Ec3PieViz, self).__init__(datasource, form_data, slice_)
+
+class Ec3MapViz(Ec3Viz):
 
     """A basic html table that is sortable and searchable"""
 
     viz_type = "ec3_map"
     verbose_name = _("Ec3_Map_Viz")
     credits = ''
+    is_timeseries = False
+
     fieldsets = ({
-        'label': _("GROUP BY"),
-        'description': _('查询需要用到group by聚合语句'),
-        'fields': ('groupby', 'metrics')
+        'label': _("数据查询参数"),
+        'description': _('数据查询相关参数'),
+        'fields': ('is_groupby', 'dimensions', 'metrics', 'order_by_cols')
     }, {
-        'label': _("NOT GROUPED BY"),
-        'description': _('查询原始记录不做group by聚合'),
-        'fields': ('all_columns', 'order_by_cols'),
-    }, {
-        'label': _("Options"),
-        'description': _('echart options'),
+        'label': _("Echart Options参数设置"),
+        'description': _('Echart Options参数设置'),
         'fields': (
             'custom_map', 'options'
         )
     })
-    form_overrides = ({
-        'metrics': {
-            'default': [],
-        },
-    })
-    is_timeseries = False
 
     def __init__(self, datasource, form_data, slice_=None):
-        super(Ec3Map, self).__init__(datasource, form_data, slice_)
+        super(Ec3MapViz, self).__init__(datasource, form_data, slice_)
         fd = self.form_data
         if fd.get('custom_map'):
             from caravel import models
-            custom_map = db.session.query(models.EchartMapType)\
-            .filter_by(map_name = fd.get('custom_map')).first()
-            self.form_data["custom_map_url"] = custom_map.map_url
+            custom_map = db.session.query(models.Resource)\
+            .filter_by(name = fd.get('custom_map')).first()
+            self.form_data["custom_map_url"] = custom_map.url
 
-    def query_obj(self):
-        d = super(Ec3Map, self).query_obj()
-        fd = self.form_data
-        if fd.get('all_columns') and (fd.get('groupby') or fd.get('metrics')):
-            raise Exception(
-                "Choose either fields to [Group By] and [Metrics] or "
-                "[Columns], not both")
-        if fd.get('all_columns'):
-            d['columns'] = fd.get('all_columns')
-            d['groupby'] = []
-            if fd.get('order_by_cols', []):
-                d['orderby'] = [json.loads(t) for t in fd.get('order_by_cols', [])]
-        return d
-
-    def get_df(self, query_obj=None):
-        df = super(Ec3Map, self).get_df(query_obj)
-        if (
-                self.form_data.get("granularity") == "all" and
-                'timestamp' in df):
-            del df['timestamp']
-        return df
-
-    def get_data(self):
-        df = self.get_df()
-        return dict(
-            records=df.to_dict(orient="records"),
-            columns=list(df.columns),
-        )
-
-    def json_dumps(self, obj):
-        return json.dumps(obj, default=utils.json_iso_dttm_ser)
 
 viz_types_list = [
-    Ec3BarLinePieViz,
-    Ec3Map,
+    Ec3BarLineViz,
+    Ec3PieViz,
+    Ec3MapViz,
     TableViz,
     PivotTableViz,
     NVD3TimeSeriesViz,

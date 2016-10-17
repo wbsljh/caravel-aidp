@@ -11,9 +11,11 @@ function SliceCell({ expandedSlices, removeSlice, slice }) {
     <div>
       <div className="chart-header">
         <div className="row">
+          {!slice.form_data.hide_slice_title &&
           <div className="col-md-12 header">
             <span>{slice.slice_name}</span>
           </div>
+          }
           {slice.form_data.readonly != 'true' &&
           <div className="col-md-12 chart-controls">
             <div className="pull-right">

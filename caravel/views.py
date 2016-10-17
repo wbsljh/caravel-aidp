@@ -1323,9 +1323,9 @@ class Caravel(BaseCaravelView):
         d = args.to_dict(flat=False)
         del d['action']
         del d['previous_viz_type']
-
+        # add dimensitons by bread 20161014
         as_list = ('metrics', 'groupby', 'columns', 'all_columns',
-                   'mapbox_label', 'order_by_cols')
+                   'mapbox_label', 'order_by_cols', 'dimensions')
         for k in d:
             v = d.get(k)
             if k in as_list and not isinstance(v, list):
@@ -2110,18 +2110,35 @@ appbuilder.add_view(
     category_label=__("Sources"),
     category_icon='')
 
-class EchartMapTypeModelView(CaravelModelView, DeleteMixin):
-    datamodel = SQLAInterface(models.EchartMapType)
-    label_columns = {'file_name': 'File Name', 'download': 'Download'}
-    list_columns = ['map_name', 'file', 'file_name', 'download']
-    show_columns = ['map_name', 'file', 'file_name', 'download']
-    edit_columns = ['map_name', 'file']
+class ResourceCategoryModelView(CaravelModelView, DeleteMixin):
+    datamodel = SQLAInterface(models.ResourceCategory)
+    label_columns = {'name': 'Name'}
+    list_columns = ['id', 'name']
+    show_columns = ['id', 'name']
+    edit_columns = ['name']
+    add_columns = edit_columns
+
+class ResourceModelView(CaravelModelView, DeleteMixin):
+    datamodel = SQLAInterface(models.Resource)
+    label_columns = {'file_name': '文件名', 'download': '下载'}
+    list_columns = ['category', 'name', 'url']
+    show_columns = ['category', 'name', 'file', 'file_name', 'url', 'download']
+    edit_columns = ['category', 'name', 'file']
     add_columns = edit_columns
 
 appbuilder.add_view(
-    EchartMapTypeModelView,
-    "EchartMapType",
-    label=__("EchartMapType"),
+    ResourceModelView,
+    "Resource",
+    label=__(u"Resource"),
+    icon="fa-css3",
+    category="Sources",
+    category_label=__("Sources"),
+    category_icon='')
+
+appbuilder.add_view(
+    ResourceCategoryModelView,
+    "ResourceCategory",
+    label=__("ResourceCategory"),
     icon="fa-css3",
     category="Sources",
     category_label=__("Sources"),

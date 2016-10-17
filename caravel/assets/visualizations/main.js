@@ -28,7 +28,8 @@ const vizMap = {
   treemap: require('./treemap.js'),
   word_cloud: require('./word_cloud.js'),
   world_map: require('./world_map.js'),
-  ec3_barlinepie: require('./ec3_barlinepie.js'),
-  ec3_map: require('./ec3_map.js')
+  ec3_barline: require('./ec3_barlinepie.js'),
+  ec3_map: require('./ec3_map.js'),
+  ec3_pie: require('./ec3_barlinepie.js')
 };
 export default vizMap;
