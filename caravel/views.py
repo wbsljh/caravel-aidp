@@ -1323,9 +1323,9 @@ class Caravel(BaseCaravelView):
         d = args.to_dict(flat=False)
         del d['action']
         del d['previous_viz_type']
-
+        # add dimensitons by bread 20161014
         as_list = ('metrics', 'groupby', 'columns', 'all_columns',
-                   'mapbox_label', 'order_by_cols')
+                   'mapbox_label', 'order_by_cols', 'dimensions')
         for k in d:
             v = d.get(k)
             if k in as_list and not isinstance(v, list):
