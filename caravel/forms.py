@@ -988,6 +988,32 @@ class FormFactory(object):
                 "label": _("隐藏切片标题"),
                 "default": False,
                 "description": "隐藏切片标题"
+            }),
+            'include_paging': (BetterBooleanField, {
+                "label": _("include_paging"),
+                "default": True,
+                "description": "dicide whether show paging"
+            }),
+            'pageLength': (IntegerField, {
+                "label": _("pageLength"),
+                "default": 20,
+                "description": "numbers per page"
+            }), 
+            'pagingType': (TextField, {
+                "label": _("pagingType"),
+                "default": 'full',
+                "description": "pagingType"
+            }),
+            'default_style': (SelectMultipleSortableField, {
+                "label": _("Default styling"),
+                "choices": self.choicify(["table-striped", "table-bordered", "table-condensed",\
+                 "table-hover", "dt-left", "dt-justify", "dt-right", "dt-nowrap"]
+                 #    ["display", "cell-border",\
+                 # "compact", "hover", "nowrap", "order-column", "row-border",\
+                 #  "stripe", "dt-left", "dt-justify", "dt-right", "dt-nowrap"]
+                  ),
+                "default": [],
+                "description": "Default styling options"
             })
         }
 
