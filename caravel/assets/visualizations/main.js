@@ -31,7 +31,7 @@ const vizMap = {
   ec3_barline: require('./ec3_barlinepie.js'),
   ec3_map: require('./ec3_map.js'),
   ec3_pie: require('./ec3_barlinepie.js'),
-  ai_markup: require('./markup.js'),
+  ai_markup: require('./ai_markup.js'),
   ai_table: require('./ai_table.js')
 };
 export default vizMap;
