@@ -197,6 +197,7 @@ function AiTableVis(slice) {
         scrollCollapse: true,
         scrollX: false,
         language: language_cn,
+        dom: '<"top"i>rt<"row"<"col-md-4"f><"col-md-4"l><"col-md-4"p>><"clear">'
       }
       if (fd.include_paging){
         options['paging'] = fd.include_paging
