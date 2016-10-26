@@ -103,6 +103,41 @@ function d3format(format, number) {
   }
   return formatters[format](number);
 }
+
+/**
+*  a slice event callback to trigger other slices to react
+*/
+const fltTrigger = function(){
+
+  let flt_triggers = {};
+  setSingleTrigger = function(s_slice_trigger){
+    $.extend(this.flt_triggers,s_slice_trigger);
+  };
+  /**
+  * add a single trigger
+  * param aim_slice_id: the target slice need to be reload
+  * param aim_slice:    config of the target slice,format:{slice_id:{}}
+  */
+  addSingleTrigger = function(aim_slice_id,aim_slice){
+
+    if(aim_slice_id){
+      let s_trigger = this.flt_triggers[aim_slice_id]||{};
+      let aim_cfg = aim_slice[aim_slice_id]||{};
+      s_trigger = aim_slice.map(function(el){
+        return {el:'',text:''}
+      });
+    }
+  };
+
+  delSingleTrigger = function(aim_slice_id){
+    aim_slice_id&&delete this.flt_triggers[aim_slice_id];
+  };
+
+  trigger = function(aim_slice_id){
+    aim_slice_id&&delete this.flt_triggers[aim_slice_id];
+  };
+
+}
 module.exports = {
   d3format,
   fixDataTableBodyHeight,

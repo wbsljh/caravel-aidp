@@ -44,12 +44,11 @@ function dashboardContainer(dashboardData,urlParams) {
   let dashboard = $.extend(dashboardData,{
     filters: {},
     init() {
-      console.log(urlParams);
       this.initDashboardView();
       this.firstLoad = true;
       px.initFavStars();
       const sliceObjects = [];
-      const dash = this;
+      const dash = this;  
       dashboard.slices.forEach((data) => {
         if (data.error) {
           const html = '<div class="alert alert-danger">' + data.error + '</div>';
@@ -73,7 +72,6 @@ function dashboardContainer(dashboardData,urlParams) {
       for (const param in urlParams){
         //'preselect_filters' exluded for been used in filter_box 
         if(param&&param!=='preselect_filters'){
-          console.log(param+":"+urlParams[param]);
           this.setFilter(0, param, urlParams[param], false, false);
         }        
       }
@@ -317,7 +315,6 @@ function dashboardContainer(dashboardData,urlParams) {
       this.curUserId = $('.dashboard').data('user');
 
       dashboard = this;
-
       // Displaying widget controls on hover
       $('.react-grid-item').hover(
         function () {

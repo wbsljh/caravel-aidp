@@ -2249,12 +2249,71 @@ class AiTableViz(BaseViz):
     def json_dumps(self, obj):
         return json.dumps(obj, default=utils.json_iso_dttm_ser)
 
+class AiSwiperViz(BaseViz):
+
+    """swpier.js """
+
+    viz_type = "ai_swiper"
+    verbose_name = _("Ai Swiper View")
+    credits = '<a href="http://www.swiper.com.cn/usage/index.html">swiper.js</a>'
+    fieldsets = ({
+        'label': _("GROUP BY"),
+        'description': _('Use this section if you want a query that aggregates'),
+        'fields': ('groupby', 'metrics')
+    }, {
+        'label': _("NOT GROUPED BY"),
+        'description': _('Use this section if you want to query atomic rows'),
+        'fields': ('all_columns', 'order_by_cols'),
+    }, {
+        'label': _("Options"),
+        'fields': ('aiswpier_pagination','aiswpier_direction')
+    })
+    form_overrides = ({
+        'metrics': {
+            'default': [],
+        },
+    })
+    is_timeseries = False
+
+    def query_obj(self):
+        d = super(AiSwiperViz, self).query_obj()
+        fd = self.form_data
+        if fd.get('all_columns') and (fd.get('groupby') or fd.get('metrics')):
+            raise Exception(
+                "Choose either fields to [Group By] and [Metrics] or "
+                "[Columns], not both")
+        if fd.get('all_columns'):
+            d['columns'] = fd.get('all_columns')
+            d['groupby'] = []
+            if fd.get('order_by_cols', []):
+                d['orderby'] = [json.loads(t) for t in fd.get('order_by_cols', [])]
+        return d
+
+    def get_df(self, query_obj=None):
+        df = super(AiSwiperViz, self).get_df(query_obj)
+        if (
+                self.form_data.get("granularity") == "all" and
+                'timestamp' in df):
+            del df['timestamp']
+        return df
+
+    def get_data(self):
+        df = self.get_df()
+        return dict(
+            records=df.to_dict(orient="records"),
+            columns=list(df.columns),
+        )
+
+    def json_dumps(self, obj):
+        return json.dumps(obj, default=utils.json_iso_dttm_ser)
+
 viz_types_list = [
     Ec3BarLineViz,
     Ec3PieViz,
     Ec3MapViz,
     AiMarkupViz,
     AiTableViz,
+    AiSwiperViz,
     TableViz,
     PivotTableViz,
     NVD3TimeSeriesViz,

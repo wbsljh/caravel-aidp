@@ -1014,6 +1014,19 @@ class FormFactory(object):
                   ),
                 "default": [],
                 "description": "Default styling options"
+            }),
+            'aiswpier_pagination': (BetterBooleanField, {
+                "label": _("分页"),
+                "default": True,
+                "description": "是否分页"
+            }),
+            'aiswpier_direction': (FreeFormSelectField, {
+                "label": _("滑动方向"),
+                "choices": [
+                    ("horizontal", "horizontal"),
+                    ("vertical", "vertical"),
+                ],
+                "description": "设置水平或竖直滑动"
             })
         }
 
