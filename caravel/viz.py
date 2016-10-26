@@ -247,7 +247,7 @@ class BaseViz(object):
             from_dttm = now - (from_dttm - now)
         until = extra_filters.get('__to') or form_data.get("until", "now")
         to_dttm = utils.parse_human_datetime(until)
-        if from_dttm > to_dttm: 
+        if from_dttm > to_dttm:
             flasher("The date range doesn't seem right.", "danger")
             from_dttm = to_dttm  # Making them identical to not raise
 
@@ -2030,11 +2030,11 @@ class Ec3Viz(BaseViz):
         else:
             d['columns'] = (fd.get('dimensions') if fd.get('dimensions') else []) +\
              (fd.get('metrics') if fd.get('metrics') else [])
-            d['metrics'] = []      
-        
+            d['metrics'] = []
+
         if fd.get('order_by_cols', []):
             d['orderby'] = [json.loads(t) for t in fd.get('order_by_cols', [])]
-    
+
         return d
 
     def get_df(self, query_obj=None):
@@ -2249,6 +2249,7 @@ class AiTableViz(BaseViz):
     def json_dumps(self, obj):
         return json.dumps(obj, default=utils.json_iso_dttm_ser)
 
+
 class AiSwiperViz(BaseViz):
 
     """swpier.js """
@@ -2307,6 +2308,73 @@ class AiSwiperViz(BaseViz):
     def json_dumps(self, obj):
         return json.dumps(obj, default=utils.json_iso_dttm_ser)
 
+class AiFilterBoxViz(BaseViz):
+
+    """A multi filter, multi-choice filter box to make dashboards interactive"""
+
+    viz_type = "ai_filter_box"
+    verbose_name = _("Ai Filters")
+    is_timeseries = False
+    credits = ''
+    fieldsets = ({
+        'label': None,
+        'fields': (
+            ('date_filter', None),
+            'all_columns', 'widget',
+        )
+    },)
+
+    form_overrides = {
+        'groupby': {
+            'label': _('Filter fields'),
+            'description': _("The fields you want to filter on"),
+        },
+    }
+
+    def query_obj(self):
+        d = super(AiFilterBoxViz, self).query_obj()
+        all_columns = self.form_data.get('all_columns')
+        if len(all_columns) < 1 and not self.form_data.get('date_filter'):
+            raise Exception("Pick at least one filter field")
+        d["columns"] = all_columns
+        return d
+
+    def get_data(self):
+        qry = self.query_obj()
+        flt = self.form_data['all_columns'][0]
+        d = {}
+        # for flt in filters:
+        df = super(AiFilterBoxViz, self).get_df(qry)
+        d[flt] = [{
+            'id': row[0],
+            'text': row[1] if len(row) > 1 else row[0],
+            }
+            for row in df.itertuples(index=False)
+        ]
+        return d
+
+class AiCalendarFilterViz(BaseViz):
+
+    """A multi filter, multi-choice filter box to make dashboards interactive"""
+
+    viz_type = "ai_calendar_filter"
+    verbose_name = _("Ai Calendar Filters")
+    is_timeseries = False
+    credits = ''
+    fieldsets = ({
+        'label': None,
+        'fields': (
+            ('domain_granularity', 'calendar_style'),
+        )
+    },)
+
+    form_overrides = {
+        'domain_granularity': {
+            'label': _('Granularity'),
+            'description': _("The Time Granularity"),
+        },
+    }
+
 viz_types_list = [
     Ec3BarLineViz,
     Ec3PieViz,
@@ -2314,6 +2382,8 @@ viz_types_list = [
     AiMarkupViz,
     AiTableViz,
     AiSwiperViz,
+    AiFilterBoxViz,
+    AiCalendarFilterViz,
     TableViz,
     PivotTableViz,
     NVD3TimeSeriesViz,

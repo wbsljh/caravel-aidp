@@ -1027,7 +1027,19 @@ class FormFactory(object):
                     ("vertical", "vertical"),
                 ],
                 "description": "设置水平或竖直滑动"
+            }),
+            'widget': (SelectField, {
+                "label": _("Widget"),
+                "choices": self.choicify(["select_single", "select_multi", "checkbox", "radio", "datetime", "refresh"]),
+                "description": "widget"
+            }),
+            'calendar_style': (SelectField, {
+                "label": _("Calendar Style"),
+                "choices": self.choicify(["input", "component", "date-range", "inline"]),
+                "description": "Calendar Style"
             })
+
+            
         }
 
         # Override default arguments with form overrides
