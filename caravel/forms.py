@@ -1014,7 +1014,19 @@ class FormFactory(object):
                   ),
                 "default": [],
                 "description": "Default styling options"
+            }),
+            'widget': (SelectField, {
+                "label": _("Widget"),
+                "choices": self.choicify(["select_single", "select_multi", "checkbox", "radio", "datetime", "refresh"]),
+                "description": "widget"
+            }),
+            'calendar_style': (SelectField, {
+                "label": _("Calendar Style"),
+                "choices": self.choicify(["input", "component", "date-range", "inline"]),
+                "description": "Calendar Style"
             })
+
+            
         }
 
         # Override default arguments with form overrides
