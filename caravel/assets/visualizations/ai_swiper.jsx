@@ -50,6 +50,7 @@ var AiSwiper = React.createClass({
 
 function aiSwiperWidget(slice) {
   function refresh() {
+    document.getElementById(slice.containerId).innerHTML='';
     $.getJSON(slice.jsonEndpoint(), (payload) => {
       ReactDOM.render(
         <AiSwiper
