@@ -137,6 +137,10 @@ class FormFactory(object):
             order_by_choices.append((json.dumps([s, False]), s + ' [desc]'))
         # Pool of all the fields that can be used in Caravel
         field_data = {
+            'slice_cus_css': (TextAreaField, {
+                "label": _("切片整体样式"),
+                "default": ''
+            }),
             'viz_type': (SelectField, {
                 "label": _("Viz"),
                 "default": 'table',
@@ -1144,7 +1148,7 @@ class FormFactory(object):
                 ['==', '!=', '>', '<', '>=', '<='])
             filter_prefixes += ['having']
         add_to_form(('since', 'until'))
-
+        
         # filter_cols defaults to ''. Filters with blank col will be ignored
         filter_cols = self.choicify(
             ([''] + viz.datasource.filterable_column_names) or [''])
@@ -1167,7 +1171,14 @@ class FormFactory(object):
                 setattr(
                     QueryForm, field_prefix + '_eq_' + str(i),
                     TextField(_("Super"), default=''))
-
+        add_to_form(('slice_cus_css', ))
+        QueryForm.fieldsets = ({
+                'label': _('样式'),
+                'fields': (
+                    'slice_cus_css',
+                ),
+                'description': _("编辑样式"),
+            },)+ tuple(QueryForm.fieldsets)
         if time_fields:
             QueryForm.fieldsets = ({
                 'label': _('Time'),
@@ -1176,5 +1187,6 @@ class FormFactory(object):
                     ('since', 'until'),
                 ),
                 'description': _("Time related form attributes"),
-            },) + tuple(QueryForm.fieldsets)
+            },)+ tuple(QueryForm.fieldsets)
+
         return QueryForm

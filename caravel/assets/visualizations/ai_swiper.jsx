@@ -13,6 +13,7 @@ var React = require('react');
 var AiSwiper = React.createClass({
 
   render: function() {
+
     const naviBtnHtml = (
       <div>
         <div className="swiper-button-prev">
@@ -24,6 +25,9 @@ var AiSwiper = React.createClass({
 
     return (
       <div id={this.props.swpConId} className="swiper-container">
+        <style>
+          {this.props.swpStyle}
+        </style>
         <div className="swiper-wrapper">
         {
           this.props.sliders.map((slider) => {
@@ -59,6 +63,7 @@ function aiSwiperWidget(slice) {
           pagination={payload.form_data.aiswpier_pagination}
           direction={payload.form_data.aiswpier_direction}
           naviBtn={payload.form_data.aiswpier_navi}
+          swpStyle={payload.form_data.slice_cus_css}
         />,
         document.getElementById(slice.containerId)
       );
