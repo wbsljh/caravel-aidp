@@ -2267,7 +2267,7 @@ class AiSwiperViz(BaseViz):
         'fields': ('all_columns', 'order_by_cols'),
     }, {
         'label': _("Options"),
-        'fields': ('aiswpier_pagination','aiswpier_direction')
+        'fields': ('aiswpier_pagination','aiswpier_navi','aiswpier_direction')
     })
     form_overrides = ({
         'metrics': {

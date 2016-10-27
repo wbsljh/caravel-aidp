@@ -13,6 +13,15 @@ var React = require('react');
 var AiSwiper = React.createClass({
 
   render: function() {
+    const naviBtnHtml = (
+      <div>
+        <div className="swiper-button-prev">
+        </div>
+        <div className="swiper-button-next">
+        </div>
+      </div>
+    );
+
     return (
       <div id={this.props.swpConId} className="swiper-container">
         <div className="swiper-wrapper">
@@ -26,8 +35,12 @@ var AiSwiper = React.createClass({
           (()=>{
             if (this.props.pagination)
               return <div className="swiper-pagination"></div>
-          })()
+          })()         
         }
+        {(()=>{
+            if (this.props.naviBtn)
+              return naviBtnHtml
+          })()}
       </div>
     );
   }
@@ -44,6 +57,7 @@ function aiSwiperWidget(slice) {
           sliders={payload.data.records}
           pagination={payload.form_data.aiswpier_pagination}
           direction={payload.form_data.aiswpier_direction}
+          naviBtn={payload.form_data.aiswpier_navi}
         />,
         document.getElementById(slice.containerId)
       );
@@ -57,6 +71,10 @@ function aiSwiperWidget(slice) {
       }
       if(fd.aiswpier_direction){
         myswpOpt.direction = fd.aiswpier_direction+'';
+      }
+      if(fd.aiswpier_navi){
+        myswpOpt.nextButton = '.swiper-button-next';
+        myswpOpt.prevButton = '.swiper-button-prev';
       }
       mySwiper = new Swiper (mySwpCon,myswpOpt);
       

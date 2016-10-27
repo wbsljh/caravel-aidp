@@ -1028,6 +1028,11 @@ class FormFactory(object):
                 ],
                 "description": "设置水平或竖直滑动"
             }),
+            'aiswpier_navi': (BetterBooleanField, {
+                "label": _("前后按钮"),
+                "default": False,
+                "description": "是否通过前后按钮控制"
+            }),
             'widget': (SelectField, {
                 "label": _("Widget"),
                 "choices": self.choicify(["select_single", "select_multi", "checkbox", "radio", "datetime", "refresh"]),
