@@ -17,6 +17,7 @@ const propTypes = {
   onChange: React.PropTypes.func,
   filterField: React.PropTypes.string,
   // showDateFilter: React.PropTypes.bool,
+  interval: React.PropTypes.integer,
 };
 
 const defaultProps = {
@@ -57,7 +58,7 @@ class IntervalFreshBox extends React.Component {
   }
 
   componentWillMount(){
-    let intervalId = setInterval(this.timer, 5000);
+    let intervalId = setInterval(this.timer, this.props.interval*1000);
     // let _this = this;
     // var intervalId = setInterval(function(){
     //   console.log('start timer()...');
@@ -110,6 +111,7 @@ function filterBox(slice) {
           // showDateFilter={fd.date_filter}
           origSelectedValues={slice.getFilters() || {}}
           filterField={filter_field}
+          interval = {fd.airefresh_interval}
         />,
         document.getElementById(slice.containerId)
       );

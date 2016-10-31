@@ -2386,7 +2386,8 @@ class AiIntervalRefreshFilterViz(BaseViz):
     fieldsets = ({
         'label': None,
         'fields': (
-            'all_columns', 'filter_field'
+            'all_columns',
+            ('filter_field', 'airefresh_interval'),
         )
     },)
 

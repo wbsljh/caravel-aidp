@@ -1054,6 +1054,11 @@ class FormFactory(object):
                 "default": '',
                 "description": "Filter Field"
             }),
+            'airefresh_interval': (IntegerField, {
+                "label": _("刷新频率(秒)"),
+                "default": 5,
+                "description": "定时刷新频率， 单位（秒）"
+            })
         }
 
         # Override default arguments with form overrides
@@ -1153,7 +1158,7 @@ class FormFactory(object):
                 ['==', '!=', '>', '<', '>=', '<='])
             filter_prefixes += ['having']
         add_to_form(('since', 'until'))
-        
+
         # filter_cols defaults to ''. Filters with blank col will be ignored
         filter_cols = self.choicify(
             ([''] + viz.datasource.filterable_column_names) or [''])
