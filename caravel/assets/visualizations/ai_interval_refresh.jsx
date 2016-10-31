@@ -49,7 +49,8 @@ class IntervalFreshBox extends React.Component {
     console.log('index: ' + index);
     this.setState({index: index});
     // console.log('this.state.index: ' + this.state.index);
-    let vals = data[index].id;
+    let vals = []
+    vals.push(data[index].id)
     const selectedValues = Object.assign({}, this.state.selectedValues);
     selectedValues[this.props.filterField] = vals;
     this.setState({ selectedValues });

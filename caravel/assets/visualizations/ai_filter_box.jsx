@@ -52,9 +52,6 @@ class FilterBox extends React.Component {
   handleClick(filter, e) {
     const clickedValue = e.target.value;
     const input_type = e.target.type;
-    console.log('clickedValue: ' + clickedValue);
-    console.log('filter: ' + filter);
-    console.log('type: ' + e.target.type);
 
     const selectedValues = Object.assign({}, this.state.selectedValues);
     let vars = selectedValues[filter];
