@@ -30,32 +30,6 @@ class CalendarFilter extends React.Component {
       selectedValues: props.origSelectedValues,
     };
   }
-  // changeFilter(filter, options) {
-  //   let vals = null;
-  //   if (options) {
-  //     if (Array.isArray(options)) {
-  //       vals = options.map((opt) => opt.value);
-  //     } else {
-  //       vals = options.value;
-  //     }
-  //   }
-  //   const selectedValues = Object.assign({}, this.state.selectedValues);
-  //   selectedValues[filter] = vals;
-  //   this.setState({ selectedValues });
-  //   this.props.onChange(filter, vals);
-  // }
-
-  // handleChange(filter, e) {
-  //   console.log('e.target.value: ' + e.target.value);
-  //   const clickedValue = e.target.value;
-  //   const selectedValues = Object.assign({}, this.state.selectedValues);
-  //   // let vars = [];
-  //   // vars.push(clickedValue);
-  //   console.log('vals' + JSON.stringify(vars));
-  //   selectedValues[filter] = clickedValue;
-  //   this.setState({ selectedValues });
-  //   this.props.onChange(filter, clickedValue);
-  // }
 
   componentDidUpdate() {
     this.componentDidMount();
@@ -75,22 +49,21 @@ class CalendarFilter extends React.Component {
 
     const granularity = this.props.granularity;
     switch (granularity) {
-            case "year": 
-              options['format'] = 'yyyy';
-              break;
-              
-            case "month": 
-              options['format'] = 'yyyy-mm';
-              break;
-            case "week":
-              options['format'] = 'yyyy-mm-dd'
-              break;
-            case "day": 
-              options['format'] = 'yyyy-mm-dd';
-              break;
-            default:  
-              options['format'] = 'yyyy-mm-dd';
-          }
+      case "year": 
+        options['format'] = 'yyyy';
+        break;
+      case "month": 
+        options['format'] = 'yyyy-mm';
+        break;
+      case "week":
+        options['format'] = 'yyyy-mm-dd'
+        break;
+      case "day": 
+        options['format'] = 'yyyy-mm-dd';
+        break;
+      default:  
+        options['format'] = 'yyyy-mm-dd';
+    }
     options['maxViewMode'] = granularity + 's';
     options['minViewMode'] = granularity + 's';
     

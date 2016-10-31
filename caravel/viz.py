@@ -2316,6 +2316,52 @@ class AiCalendarFilterViz(BaseViz):
         },
     }
 
+class AiIntervalRefreshFilterViz(BaseViz):
+
+    """A multi filter, multi-choice filter box to make dashboards interactive"""
+
+    viz_type = "ai_interval_refresh"
+    verbose_name = _("Ai Interval Refresh Filters")
+    is_timeseries = False
+    credits = ''
+    fieldsets = ({
+        'label': None,
+        'fields': (
+            'all_columns', 'filter_field'
+        )
+    },)
+
+    # form_overrides = {
+    #     'groupby': {
+    #         'label': _('Filter fields'),
+    #         'description': _("The fields you want to filter on"),
+    #     },
+    # }
+
+    def query_obj(self):
+        d = super(AiIntervalRefreshFilterViz, self).query_obj()
+        all_columns = self.form_data.get('all_columns')
+        if len(all_columns) < 1:
+            raise Exception("Pick at least one filter field")
+        d["columns"] = all_columns
+        return d
+
+    def get_data(self):
+        qry = self.query_obj()
+        flt = self.form_data['filter_field']
+        if not flt:
+            raise Exception("filter_field if required")
+        d = {}
+        # for flt in filters:
+        df = super(AiIntervalRefreshFilterViz, self).get_df(qry)
+        d[flt] = [{
+            'id': row[0],
+            'text': row[1] if len(row) > 1 else row[0],
+            }
+            for row in df.itertuples(index=False)
+        ]
+        return d
+
 viz_types_list = [
     Ec3BarLineViz,
     Ec3PieViz,
@@ -2324,6 +2370,7 @@ viz_types_list = [
     AiTableViz,
     AiFilterBoxViz,
     AiCalendarFilterViz,
+    AiIntervalRefreshFilterViz,
     TableViz,
     PivotTableViz,
     NVD3TimeSeriesViz,
