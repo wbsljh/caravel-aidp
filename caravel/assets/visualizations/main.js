@@ -36,5 +36,6 @@ const vizMap = {
   ai_swiper: require('./ai_swiper.jsx'),
   ai_filter_box: require('./ai_filter_box.jsx'),
   ai_calendar_filter: require('./ai_calendar_filter.jsx'),
+  ai_interval_refresh: require('./ai_interval_refresh.jsx'),
 };
 export default vizMap;

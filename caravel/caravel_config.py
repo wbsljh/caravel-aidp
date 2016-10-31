@@ -21,7 +21,7 @@ SECRET_KEY = '\2\1thisismyscretkey\1\2\e\y\y\h'
 # Note that the connection information to connect to the datasources
 # you want to explore are managed directly in the web UI
 #SQLALCHEMY_DATABASE_URI = 'sqlite:////tmp/caravel.db'
-SQLALCHEMY_DATABASE_URI = 'mysql://root:root@localhost/caravel'
+SQLALCHEMY_DATABASE_URI = 'mysql://root:password@localhost/caravel'
 
 # Flask-WTF flag for CSRF
 CSRF_ENABLED = True
@@ -59,7 +59,7 @@ LANGUAGES = {
 CAS_LOGIN_ROUTE = '/casWeb/login'
 CAS_LOGOUT_ROUTE = '/casWeb/logout'
 CAS_VALIDATE_ROUTE = '/casWeb/serviceValidate'
-CAS_SERVER = 'http://192.168.0.36:8780/casWeb' 
+CAS_SERVER = 'http://192.168.0.36:8780/casWeb'
 CAS_AFTER_LOGIN = 'CustomAuthDBView.cas'
 CAS_AFTER_LOGOUT_TEMP = 'CustomAuthDBView.cas_logout'
 

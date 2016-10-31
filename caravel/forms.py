@@ -1002,7 +1002,7 @@ class FormFactory(object):
                 "label": _("pageLength"),
                 "default": 20,
                 "description": "numbers per page"
-            }), 
+            }),
             'pagingType': (TextField, {
                 "label": _("pagingType"),
                 "default": 'full',
@@ -1039,16 +1039,26 @@ class FormFactory(object):
             }),
             'widget': (SelectField, {
                 "label": _("Widget"),
-                "choices": self.choicify(["select_single", "select_multi", "checkbox", "radio", "datetime", "refresh"]),
+                "choices": self.choicify(["select_single", "select_multi", "checkbox", "radio"]),
+                #"choices": self.choicify(["select_single", "select_multi", "checkbox", "radio", "datetime", "refresh"]),
                 "description": "widget"
             }),
             'calendar_style': (SelectField, {
                 "label": _("Calendar Style"),
-                "choices": self.choicify(["input", "component", "date-range", "inline"]),
+                "choices": self.choicify(["date-range", "inline"]),
+                #"choices": self.choicify(["input", "component", "date-range", "inline"]),
                 "description": "Calendar Style"
+            }),
+            'filter_field': (TextField, {
+                "label": _("Filter Field"),
+                "default": '',
+                "description": "Filter Field"
+            }),
+            'airefresh_interval': (IntegerField, {
+                "label": _("刷新频率(秒)"),
+                "default": 5,
+                "description": "定时刷新频率， 单位（秒）"
             })
-
-            
         }
 
         # Override default arguments with form overrides
@@ -1148,7 +1158,7 @@ class FormFactory(object):
                 ['==', '!=', '>', '<', '>=', '<='])
             filter_prefixes += ['having']
         add_to_form(('since', 'until'))
-        
+
         # filter_cols defaults to ''. Filters with blank col will be ignored
         filter_cols = self.choicify(
             ([''] + viz.datasource.filterable_column_names) or [''])

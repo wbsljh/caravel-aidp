@@ -14,6 +14,7 @@ const propTypes = {
   filtersChoices: React.PropTypes.object,
   onChange: React.PropTypes.func,
   style: React.PropTypes.string,
+  granularity: React.PropTypes.string,
 };
 
 const defaultProps = {
@@ -29,54 +30,72 @@ class CalendarFilter extends React.Component {
       selectedValues: props.origSelectedValues,
     };
   }
-  changeFilter(filter, options) {
-    let vals = null;
-    if (options) {
-      if (Array.isArray(options)) {
-        vals = options.map((opt) => opt.value);
-      } else {
-        vals = options.value;
-      }
-    }
-    const selectedValues = Object.assign({}, this.state.selectedValues);
-    selectedValues[filter] = vals;
-    this.setState({ selectedValues });
-    this.props.onChange(filter, vals);
-  }
-
-  handleChange(filter, e) {
-    console.log('e.target.value: ' + e.target.value);
-    const clickedValue = e.target.value;
-    const selectedValues = Object.assign({}, this.state.selectedValues);
-    let vars = [];
-    vars.push(clickedValue);
-    console.log('vals' + JSON.stringify(vars));
-    selectedValues[filter] = vars;
-    this.setState({ selectedValues });
-    this.props.onChange(filter, vars);
-  }
 
   componentDidUpdate() {
     this.componentDidMount();
   }
 
   componentDidMount() {
+    const _this = this;
     console.log('execute componentDidMount...');
     let options = {
       language: 'zh-CN',
       todayHighlight: true,
       // changeDate: handleChangeDate,
+      format: 'yyyy-mm-dd',
+      todayBtn: true,
+      autoclose: true,
     };
+
+    const granularity = this.props.granularity;
+    switch (granularity) {
+      case "year": 
+        options['format'] = 'yyyy';
+        break;
+      case "month": 
+        options['format'] = 'yyyy-mm';
+        break;
+      case "week":
+        options['format'] = 'yyyy-mm-dd'
+        break;
+      case "day": 
+        options['format'] = 'yyyy-mm-dd';
+        break;
+      default:  
+        options['format'] = 'yyyy-mm-dd';
+    }
+    options['maxViewMode'] = granularity + 's';
+    options['minViewMode'] = granularity + 's';
+    
     console.log('this.props.style : ' + this.props.style);
-    if (this.props.style == 'date-range'){
+    if (_this.props.style == 'date-range'){
       $('.input-daterange input').each(function() {
-        $(this).datepicker(options);
+        let filter = this.name;
+        $(this).datepicker(options).on('changeDate', function(e) {
+          console.log('e.target.value: ' + e.target.value);
+          console.log('e.date: ' + e.date);
+          console.log('e.format: ' + e.format('yyyy-mm-dd'));
+          const clickedValue = e.format('yyyy-mm-dd');
+          const selectedValues = Object.assign({}, _this.state.selectedValues);
+          selectedValues[filter] = clickedValue;
+          _this.setState({ selectedValues });
+          _this.props.onChange(filter, clickedValue);
+        });
       })
     } else {
       $('#datepicker').datepicker(options).on('changeDate', function(e){
-        console.log('e.date...' + e.date);
-        $("input[name='__from']").val(e.date);
-        $("input[name='__to']").val(e.date);
+        // console.log('e.date...' + e.date);
+        // $(".inline input[name='__from']").val(e.date);
+        // $(".inline input[name='__to']").val(e.date);
+        console.log('e.target.value: ' + e.target.value);
+        console.log('e.date: ' + e.date);
+        console.log('e.format: ' + e.format('yyyy-mm-dd'));
+        const clickedValue = e.format('yyyy-mm-dd');
+        const selectedValues = Object.assign({}, _this.state.selectedValues);
+        selectedValues['__from'] = clickedValue;
+        selectedValues['__to'] = clickedValue;
+        _this.setState({ selectedValues });
+        _this.props.onChange('__from', clickedValue);
       });
     }
   }
@@ -85,15 +104,15 @@ class CalendarFilter extends React.Component {
     let html = "";
     if (this.props.style == 'date-range'){
       html = (<div className="input-group input-daterange">
-              <input name = "__from" type="text" className="form-control" onChange={this.handleChange.bind(this, '__from')}/>
+              <input value={this.state.selectedValues['__from']} name = "__from" type="text" className="form-control"/>
               <span className="input-group-addon">to</span>
-              <input name = "__to" type="text" className="form-control" onChange={this.handleChange.bind(this, '__to')}/>
+              <input value={this.state.selectedValues['__to']} name = "__to" type="text" className="form-control"/>
           </div>);
     } else {
-      html = (<div>
-      <div id="datepicker" data-date="12/03/2012"></div>
-      <input type="hidden" name="__from" onChange={this.handleChange.bind(this, '__from')}/>
-      <input type="hidden" name="__to" onChange={this.handleChange.bind(this, '__to')}/>
+      html = (<div className="inline">
+      <div id="datepicker"></div>
+      <input value={this.state.selectedValues['__from']} type="hidden" name="__from"/>
+      <input value={this.state.selectedValues['__to']} type="hidden" name="__to"/>
       </div>);
     }
 
@@ -120,6 +139,7 @@ function filterBox(slice) {
           onChange={slice.setFilter}
           style={fd.calendar_style}
           origSelectedValues={slice.getFilters() || {}}
+          granularity={fd.domain_granularity}
         />,
         document.getElementById(slice.containerId)
       );
