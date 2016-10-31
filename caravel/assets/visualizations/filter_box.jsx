@@ -44,7 +44,9 @@ class FilterBox extends React.Component {
     selectedValues[filter] = vals;
     this.setState({ selectedValues });
     this.props.onChange(filter, vals);
+
   }
+
   render() {
     let dateFilter;
     if (this.props.showDateFilter) {

@@ -40,15 +40,15 @@ function injectCss(className, css) {
   }
 }
 
-function dashboardContainer(dashboardData) {
-  let dashboard = $.extend(dashboardData, {
+function dashboardContainer(dashboardData,urlParams) {
+  let dashboard = $.extend(dashboardData,{
     filters: {},
     init() {
       this.initDashboardView();
       this.firstLoad = true;
       px.initFavStars();
       const sliceObjects = [];
-      const dash = this;
+      const dash = this;  
       dashboard.slices.forEach((data) => {
         if (data.error) {
           const html = '<div class="alert alert-danger">' + data.error + '</div>';
@@ -68,15 +68,23 @@ function dashboardContainer(dashboardData) {
       this.bindResizeToWindowResize();
     },
     loadPreSelectFilters() {
+      //set globe params,which sliceid was fixed to 0
+      for (const param in urlParams){
+        //'preselect_filters' exluded for been used in filter_box 
+        if(param&&param!=='preselect_filters'){
+          this.setFilter(0, param, urlParams[param], false, false);
+        }        
+      }
+
       try {
         const filters = JSON.parse(px.getParam('preselect_filters') || '{}');
         for (const sliceId in filters) {
           for (const col in filters[sliceId]) {
             this.setFilter(sliceId, col, filters[sliceId][col], false, false);
-          }
+          }          
         }
       } catch (e) {
-        // console.error(e);
+         //console.error(e);
       }
     },
     setFilter(sliceId, col, vals, refresh) {
@@ -307,7 +315,6 @@ function dashboardContainer(dashboardData) {
       this.curUserId = $('.dashboard').data('user');
 
       dashboard = this;
-
       // Displaying widget controls on hover
       $('.react-grid-item').hover(
         function () {
@@ -388,6 +395,6 @@ function dashboardContainer(dashboardData) {
 }
 
 $(document).ready(() => {
-  dashboardContainer($('.dashboard').data('dashboard'));
+  dashboardContainer($('.dashboard').data('dashboard'),$('.dashboard').data('urlparams'));
   $('[data-toggle="tooltip"]').tooltip({ container: 'body' });
 });

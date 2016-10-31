@@ -1541,8 +1541,6 @@ class Caravel(BaseCaravelView):
     @expose("/warm_up_cache/", methods=['GET'])
     def warm_up_cache(self):
         """Warms up the cache for the slice or table."""
-        slices = None
-        session = db.session()
         slice_id = request.args.get('slice_id')
         table_name = request.args.get('table_name')
         db_name = request.args.get('db_name')
@@ -1618,6 +1616,10 @@ class Caravel(BaseCaravelView):
     @expose("/dashboard/<dashboard_id>/")
     def dashboard(self, dashboard_id):
         """Server side rendering for a dashboard"""
+
+        #
+        url_params_multidict = request.args  # MultiDict
+
         session = db.session()
         qry = session.query(models.Dashboard)
         if dashboard_id.isdigit():
@@ -1627,7 +1629,6 @@ class Caravel(BaseCaravelView):
 
         templates = session.query(models.CssTemplate).all()
         dash = qry.first()
-
         # Hack to log the dashboard_id properly, even when getting a slug
         @log_this
         def dashboard(**kwargs):  # noqa
@@ -1636,7 +1637,7 @@ class Caravel(BaseCaravelView):
         dash_edit_perm = check_ownership(dash, raise_if_false=False)
         dash_save_perm = dash_edit_perm and self.can_access('can_save_dash', 'Caravel')
         return self.render_template(
-            "caravel/dashboard.html", dashboard=dash,
+            "caravel/dashboard.html", dashboard=dash,url_params=json.dumps(url_params_multidict),
             user_id=g.user.get_id(),
             templates=templates,
             dash_save_perm=dash_save_perm,
