@@ -1037,6 +1037,16 @@ class FormFactory(object):
                 "default": False,
                 "description": "是否通过前后按钮控制"
             }),
+            'aiswpier_urls': (TextAreaField, {
+                "label": _("自定义幻灯片页面"),
+                "default": ''
+            }),
+            'aiswpier_defslide': (IntegerField, {
+                "label": _("默认幻灯片"),
+                "description": _(
+                    "默认展示的幻灯片，从0开始计数"),
+                "default":0
+            }),
             'widget': (SelectField, {
                 "label": _("Widget"),
                 "choices": self.choicify(["select_single", "select_multi", "checkbox", "radio"]),

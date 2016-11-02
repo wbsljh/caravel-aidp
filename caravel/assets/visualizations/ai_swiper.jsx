@@ -1,4 +1,6 @@
-const $ = require('jquery');
+import $ from 'jquery';
+
+import React, { PropTypes } from 'react';
 
 import ReactDOM from 'react-dom';
 
@@ -8,11 +10,25 @@ import '../javascripts/jsframe/swiper-3.4.0/swiper.min.css';
 
 import './ai_swiper.css';
 
-var React = require('react');
+const propTypes = {
+  defSlide: React.PropTypes.number
+};
 
-var AiSwiper = React.createClass({
+class AiSwiper extends React.Component{
 
-  render: function() {
+  constructor (props, context) {
+    super(props, context)
+
+    this.state = {  } // 初始化状态
+
+    
+  }
+
+  render() {
+
+    const pageHtml = (
+      <div className="swiper-pagination"></div>
+    );
 
     const naviBtnHtml = (
       <div>
@@ -30,27 +46,25 @@ var AiSwiper = React.createClass({
         </style>
         <div className="swiper-wrapper">
         {
-          this.props.sliders.map((slider) => {
-            return <div className="swiper-slide">{slider.name}</div>
-          })
-        }
+            this.props.sldurls?JSON.parse(this.props.sldurls).map((aurl,aidx) => {
+              return <div className="swiper-slide"><iframe width="100%" height="100%" src={aurl} scrolling="no" frameborder="0"></iframe></div>
+            }):this.props.sliders.map((slider) => {
+              return <div className="swiper-slide">{slider.name}</div>
+            })
+        }        
         </div>
         {
-          (()=>{
-            if (this.props.pagination)
-              return <div className="swiper-pagination"></div>
-          })()         
+          (() => {if(this.props.pagination) return pageHtml})()
         }
-        {(()=>{
-            if (this.props.naviBtn)
-              return naviBtnHtml
-          })()}
+        {
+          (() => {if(this.props.naviBtn) return naviBtnHtml})()
+        }
       </div>
     );
   }
 
 
-});
+};
 
 function aiSwiperWidget(slice) {
   function refresh() {
@@ -60,10 +74,12 @@ function aiSwiperWidget(slice) {
         <AiSwiper
           swpConId={'mySwp_'+payload.form_data.slice_id} 
           sliders={payload.data.records}
+          sldurls={payload.form_data.aiswpier_urls}
           pagination={payload.form_data.aiswpier_pagination}
           direction={payload.form_data.aiswpier_direction}
           naviBtn={payload.form_data.aiswpier_navi}
           swpStyle={payload.form_data.slice_cus_css}
+          defSlide={payload.form_data.aiswpier_defslide}
         />,
         document.getElementById(slice.containerId)
       );
@@ -82,6 +98,10 @@ function aiSwiperWidget(slice) {
         myswpOpt.nextButton = '.swiper-button-next';
         myswpOpt.prevButton = '.swiper-button-prev';
       }
+      if(fd.aiswpier_defslide){
+        myswpOpt.initialSlide = fd.aiswpier_defslide;
+      }
+      
       mySwiper = new Swiper (mySwpCon,myswpOpt);
       
       slice.done(payload);
