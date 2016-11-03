@@ -805,7 +805,7 @@ class SqlaTable(Model, Queryable, AuditMixinNullable):
         groupby_exprs = []
 
         if groupby:
-            select_exprs = []
+            select_expr
             inner_select_exprs = []
             inner_groupby_exprs = []
             for s in groupby:
@@ -2120,7 +2120,7 @@ class Resource(Model):
 
     def file_name(self):
         return get_file_original_name(str(self.file))
-    
+
     @property
     def url(self):
         return url_for('ResourceModelView.download', filename=str(self.file), _external = True)

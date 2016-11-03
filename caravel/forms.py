@@ -1058,7 +1058,13 @@ class FormFactory(object):
                 "label": _("刷新频率(秒)"),
                 "default": 5,
                 "description": "定时刷新频率， 单位（秒）"
-            })
+            }),
+            'ec3_wind_direction': (SelectMultipleSortableField, {
+                "label": _("风向标"),
+                "choices": self.choicify(datasource.column_names),
+                "description": _("选择一个字段作为风向标, 风向标字段的值范围必须是：(e 东，s南, w 西, n 北, es 东南, en 东北, ws 西南, wn 西北)")
+            }),
+
         }
 
         # Override default arguments with form overrides
