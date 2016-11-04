@@ -1187,14 +1187,14 @@ class FormFactory(object):
                 setattr(
                     QueryForm, field_prefix + '_eq_' + str(i),
                     TextField(_("Super"), default=''))
-        add_to_form(('slice_cus_css', ))
+        add_to_form(('hide_slice_title', 'slice_cus_css', ))
         QueryForm.fieldsets = ({
-                'label': _('样式'),
-                'fields': (
-                    'slice_cus_css',
-                ),
-                'description': _("编辑样式"),
-            },)+ tuple(QueryForm.fieldsets)
+            'label': _("切片参数设置"),
+            'description': _('切片参数设置'),
+            'fields': (
+                'hide_slice_title', 'slice_cus_css',
+            )
+        },)+ tuple(QueryForm.fieldsets)
         if time_fields:
             QueryForm.fieldsets = ({
                 'label': _('Time'),

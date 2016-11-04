@@ -1999,12 +1999,6 @@ class Ec3Viz(BaseViz):
             'is_groupby', 'dimensions', 'metrics', 'order_by_cols', 'ec3_wind_direction',
         )
     }, {
-        'label': _("切片参数设置"),
-        'description': _('切片参数设置'),
-        'fields': (
-            'hide_slice_title',
-        )
-    }, {
         'label': _("Echart Options参数设置"),
         'description': _('Echart Options参数设置'),
         'fields': (

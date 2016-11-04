@@ -288,7 +288,7 @@ class TableColumnInlineView(CompactCRUDMixin, CaravelModelView):  # noqa
     can_delete = False
     list_widget = ListWidgetWithCheckboxes
     edit_columns = [
-        'column_name', 'verbose_name', 'description', 'groupby', 'filterable',
+        'column_name', 'verbose_name', 'description', 'type', 'groupby', 'filterable',
         'table', 'count_distinct', 'sum', 'min', 'max', 'expression',
         'is_dttm', 'python_date_format', 'database_expression']
     add_columns = edit_columns
