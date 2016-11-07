@@ -2262,8 +2262,11 @@ class AiSwiperViz(BaseViz):
         'description': _('Use this section if you want to query atomic rows'),
         'fields': ('all_columns', 'order_by_cols'),
     }, {
+        'label': _("自定义幻灯片"),
+        'fields': ('aiswpier_urls',),
+    }, {
         'label': _("Options"),
-        'fields': ('aiswpier_pagination','aiswpier_navi','aiswpier_direction')
+        'fields': ('aiswpier_pagination','aiswpier_navi','aiswpier_direction','aiswpier_defslide')
     })
     form_overrides = ({
         'metrics': {
