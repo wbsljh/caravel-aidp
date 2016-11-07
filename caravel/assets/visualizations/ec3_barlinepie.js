@@ -64,7 +64,7 @@ function Ec3BarLineWidget(slice) {
     let chart_options = {};
     if (fd.options == '') {
       chart_options = getDefaultOptions(fd.viz_type);
-    } else {
+    } else if (fd.viz_type != 'ec3_map') {
       chart_options = eval('(' + fd.options + ')');
       if (!('xAxis' in chart_options)){
         chart_options.xAxis = [{type: 'category'}];
@@ -88,7 +88,7 @@ function Ec3BarLineWidget(slice) {
 
     //init data
     payload.data.records.forEach((d) => {
-      legend_data.push(d[dimension]);
+      // legend_data.push(d[dimension]);
       xaxis_data.push(d[dimension]);
     });
 
@@ -106,7 +106,8 @@ function Ec3BarLineWidget(slice) {
         if (!('name' in serie)) {
           serie.name = metric;
         }
-
+        // add legend
+        legend_data.push(metric);
 
         let serie_data = []
         payload.data.records.forEach((d) => {
@@ -135,6 +136,8 @@ function Ec3BarLineWidget(slice) {
         let metric = metrics[i]
         let serie_data = [];
 
+        legend_data.push(metric);
+        
         if (!('name' in chart_options.series[i])) {
           chart_options.series[i].name = metric;
         }
