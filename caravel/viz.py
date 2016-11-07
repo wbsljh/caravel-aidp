@@ -2017,8 +2017,8 @@ class Ec3Viz(BaseViz):
     def query_obj(self):
         d = super(Ec3Viz, self).query_obj()
         fd = self.form_data
-        if fd.get('is_groupby') and not fd.get('metrics') <= [c[1] for c in self.datasource.metrics_combo]:
-            flasher("Group By查询必须选择聚合字段作为度量指标，如:max_,min_,sum_开头字段", "danger")
+        # if fd.get('is_groupby') and not fd.get('metrics') <= [c[1] for c in self.datasource.metrics_combo]:
+            # flasher("Group By查询必须选择聚合字段作为度量指标，如:max_,min_,sum_开头字段", "danger")
         if fd.get('is_groupby'):
             d['groupby'] = fd.get('dimensions')
         else:

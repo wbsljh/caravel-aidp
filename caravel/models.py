@@ -805,7 +805,7 @@ class SqlaTable(Model, Queryable, AuditMixinNullable):
         groupby_exprs = []
 
         if groupby:
-            select_expr
+            select_expr = []
             inner_select_exprs = []
             inner_groupby_exprs = []
             for s in groupby:
