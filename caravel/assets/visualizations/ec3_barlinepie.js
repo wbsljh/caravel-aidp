@@ -45,6 +45,19 @@ function Ec3BarLineWidget(slice) {
     return chart_options;
   }
 
+  function getSymbolRotate(direction){
+    switch (direction) {
+      case 'n':
+        return 0;
+      case 'e':
+        return 90;
+      case 's':
+        return 180;
+      case 'w':
+        return 270;
+    }
+  }
+
   function getOptions(payload) {
     // get init echart_options
     let fd = payload.form_data;
@@ -53,6 +66,13 @@ function Ec3BarLineWidget(slice) {
       chart_options = getDefaultOptions(fd.viz_type);
     } else {
       chart_options = eval('(' + fd.options + ')');
+      if (!('xAxis' in chart_options)){
+        chart_options.xAxis = [{type: 'category'}];
+      }
+      if (!('yAxis' in chart_options)){
+        chart_options.yAxis = [{type: 'value'}];
+      }
+ 
     }
     //add data to echart_options
     let legend_data = [];
@@ -81,11 +101,12 @@ function Ec3BarLineWidget(slice) {
     if (chart_options.series.length <= 1) {
       for (let i = 0; i < metrics.length; i++) {
         let metric = metrics[i];
-        // if there is only on serie
+        // if there is only one serie
         let serie = default_serie;
         if (!('name' in serie)) {
           serie.name = metric;
         }
+
 
         let serie_data = []
         payload.data.records.forEach((d) => {
@@ -95,6 +116,13 @@ function Ec3BarLineWidget(slice) {
             name,
             value
           };
+
+          // add wind direction
+          if (fd.ec3_wind_direction != null) {
+            _item['symbol'] = 'arrow';
+            _item['symbolRotate'] = getSymbolRotate(d[fd.ec3_wind_direction]);
+          }
+
           serie_data.push(_item);
         });
 
@@ -119,6 +147,11 @@ function Ec3BarLineWidget(slice) {
               name,
               value
             };
+            // add wind direction
+            if (fd.ec3_wind_direction != null) {
+              _item['symbol'] = 'arrow';
+              _item['symbolRotate'] = getSymbolRotate(d[fd.ec3_wind_direction]);
+            }
             serie_data.push(_item);
           });
           chart_options.series[i].data = serie_data;

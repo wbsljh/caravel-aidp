@@ -1996,13 +1996,7 @@ class Ec3Viz(BaseViz):
         'label': _("数据查询参数"),
         'description': _('数据查询相关参数'),
         'fields': (
-            'is_groupby', 'dimensions', 'metrics', 'order_by_cols',
-        )
-    }, {
-        'label': _("切片参数设置"),
-        'description': _('切片参数设置'),
-        'fields': (
-            'hide_slice_title',
+            'is_groupby', 'dimensions', 'metrics', 'order_by_cols', 'ec3_wind_direction',
         )
     }, {
         'label': _("Echart Options参数设置"),
@@ -2029,7 +2023,9 @@ class Ec3Viz(BaseViz):
             d['groupby'] = fd.get('dimensions')
         else:
             d['columns'] = (fd.get('dimensions') if fd.get('dimensions') else []) +\
-             (fd.get('metrics') if fd.get('metrics') else [])
+             (fd.get('metrics') if fd.get('metrics') else []) +\
+             (fd.get('ec3_wind_direction') if fd.get('ec3_wind_direction') else [])
+
             d['metrics'] = []
 
         if fd.get('order_by_cols', []):

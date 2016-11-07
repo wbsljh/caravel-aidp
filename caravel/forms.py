@@ -1068,7 +1068,13 @@ class FormFactory(object):
                 "label": _("刷新频率(秒)"),
                 "default": 5,
                 "description": "定时刷新频率， 单位（秒）"
-            })
+            }),
+            'ec3_wind_direction': (SelectMultipleSortableField, {
+                "label": _("风向标"),
+                "choices": self.choicify(datasource.column_names),
+                "description": _("选择一个字段作为风向标, 风向标字段的值范围必须是：(e 东，s南, w 西, n 北, es 东南, en 东北, ws 西南, wn 西北)")
+            }),
+
         }
 
         # Override default arguments with form overrides
@@ -1191,14 +1197,14 @@ class FormFactory(object):
                 setattr(
                     QueryForm, field_prefix + '_eq_' + str(i),
                     TextField(_("Super"), default=''))
-        add_to_form(('slice_cus_css', ))
+        add_to_form(('hide_slice_title', 'slice_cus_css', ))
         QueryForm.fieldsets = ({
-                'label': _('样式'),
-                'fields': (
-                    'slice_cus_css',
-                ),
-                'description': _("编辑样式"),
-            },)+ tuple(QueryForm.fieldsets)
+            'label': _("切片参数设置"),
+            'description': _('切片参数设置'),
+            'fields': (
+                'hide_slice_title', 'slice_cus_css',
+            )
+        },)+ tuple(QueryForm.fieldsets)
         if time_fields:
             QueryForm.fieldsets = ({
                 'label': _('Time'),
