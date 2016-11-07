@@ -62,10 +62,10 @@ function Ec3BarLineWidget(slice) {
     // get init echart_options
     let fd = payload.form_data;
     let chart_options = {};
-    if (fd.options == '') {
+    if (fd.aiec3_options == '') {
       chart_options = getDefaultOptions(fd.viz_type);
     } else {
-      chart_options = eval('(' + fd.options + ')');
+      chart_options = eval('(' + fd.aiec3_options + ')');
       if (!('xAxis' in chart_options)){
         chart_options.xAxis = [{type: 'category'}];
       }
