@@ -235,21 +235,6 @@ DEFAULT_DB_ID = None
 # Timeout duration for SQL Lab synchronous queries
 SQLLAB_TIMEOUT = 30
 
-# custom config
-#about cas client config
-CAS_LOGIN_ROUTE = '/casWeb/login'
-CAS_LOGOUT_ROUTE = '/casWeb/logout'
-CAS_VALIDATE_ROUTE = '/casWeb/serviceValidate'
-CAS_SERVER = 'http://192.168.0.36:8780/casWeb'
-CAS_AFTER_LOGIN = 'CustomAuthDBView.cas'
-CAS_AFTER_LOGOUT_TEMP = 'CustomAuthDBView.cas_logout'
-
-SM_AUTHORIZATION_ROUTE = 'http://192.168.0.36:8880/smWeb/permission/queryUserAuthMenu'
- #?userId=10000&portalCode=caravel_portal
-
-# config to use cas auth
-#CUSTOM_SECURITY_MANAGER = CustomSecurityManager
-
 try:
     from .caravel_config import *  # noqa
 except ImportError:
