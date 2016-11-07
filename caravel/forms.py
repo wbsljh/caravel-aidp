@@ -966,17 +966,41 @@ class FormFactory(object):
                 ],
                 "description": _("The color for points and clusters in RGB")
             }),
-            'options': (TextAreaField, {
+            'aiec3_options': (TextAreaField, {
                 "label": _("Echart Options"),
                 "default": "",
                 "description": _(
                     "Echart Options"
                     )
             }),
-            'custom_map': (TextField, {
-                "label": _("svg资源名称"),
+            'horizon_color_scale': (SelectField, {
+                "label": _("Color Scale"),
+                "choices": (
+                    ('series', _('series')),
+                    ('overall', _('overall')),
+                    ('change', _('change')),
+                ),
+                "default": 'series',
+                "description": _("Defines how the color are attributed.")
+            }),
+            'aiec3_map_type': (SelectField, {
+                "label": _("ECHART Map type"),
+                "choices": (
+                    ('svg', _('SVG')),
+                    ('json', _('JSON')),
+                ),
+                "default": "svg",
+                "description": _("Define a Echart Map extend type!")
+            }),
+            'aiec3_map_type_name': (TextField, {
+                "label": _("ECHART Map type name"),
                 "default": "",
-                "description": _("svg资源文件名称, 如:fuzhou")
+                "description": _("Define the name of Echart Map extend type which used in echart's option!")
+            }),
+            'aiec3_map_file': (TextField, {
+                "label": _("SVG/JSON file"),
+                "default": "",
+                "description": _("full path of SVG/JSON resourse file(including file name)")
             }),
             'dimensions': (SelectMultipleSortableField, {
                 "label": _("维度"),

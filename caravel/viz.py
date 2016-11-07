@@ -2002,7 +2002,7 @@ class Ec3Viz(BaseViz):
         'label': _("Echart Options参数设置"),
         'description': _('Echart Options参数设置'),
         'fields': (
-            'options',
+            'aiec3_options',
         )
     })
 
@@ -2107,7 +2107,7 @@ class Ec3MapViz(Ec3Viz):
         'label': _("Echart Options参数设置"),
         'description': _('Echart Options参数设置'),
         'fields': (
-            'custom_map', 'options'
+            'aiec3_map_type','aiec3_map_type_name','aiec3_map_file','aiec3_options'
         )
     })
 
