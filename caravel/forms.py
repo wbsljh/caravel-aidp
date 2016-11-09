@@ -42,6 +42,14 @@ class BetterBooleanField(BooleanField):
         html = super(BetterBooleanField, self).__call__(**kwargs)
         html += u'<input type="hidden" name="{}" value="false">'.format(self.name)
         return widgets.HTMLString(html)
+    
+    # add condition when the value is 'false' 
+    # by lanjh 2016/11/09
+    def process_data(self, value):
+        if value == u'false':
+            self.data = False
+        else:
+            self.data = bool(value)
 
 
 class SelectMultipleSortableField(SelectMultipleField):
