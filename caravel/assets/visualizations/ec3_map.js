@@ -8,18 +8,28 @@ function Ec3MapWidget(slice) {
     $.getJSON(slice.jsonEndpoint(), function(payload) {
         let chart_options = ec3barline(slice).getOptions(payload)
         //regist the custom map type
-        if (payload.form_data.custom_map != ''){
-          console.log('enter to regist echart map type....');
-          echarts.util.mapData.params.params.custom = {
+        var ec3_map_type = payload.form_data.aiec3_map_type||'svg';
+        var ec3_map_name = payload.form_data.aiec3_map_type_name||'customMapName';
+        if (ec3_map_type === 'svg'){
+          console.log('enter SVG....');
+          echarts.util.mapData.params.params[ec3_map_name] = {
             getGeoJson: function(callback) {
               $.ajax({
-                url: payload.form_data.custom_map_url, 
+                url: payload.form_data.aiec3_map_file, 
                 dataType: 'xml',
                 type: "get",
                 success: function(xml) {
                   callback(xml);
                 }
               });
+            }
+          };
+        }else if (ec3_map_type === 'json'){
+          console.log('enter JSON....,ec3_map_type:'+ec3_map_type
+            +",ec3_map_name:"+ec3_map_name);
+          echarts.util.mapData.params.params[ec3_map_name] = {
+            getGeoJson: function(callback) {
+              $.getJSON(payload.form_data.aiec3_map_file,callback);
             }
           };
         }
