@@ -40,7 +40,7 @@ function injectCss(className, css) {
   }
 }
 
-function dashboardContainer(dashboardData,urlParams) {
+function dashboardContainer(dashboardData,urlParams,readonly) {
   let dashboard = $.extend(dashboardData,{
     filters: {},
     init() {
@@ -308,7 +308,7 @@ function dashboardContainer(dashboardData,urlParams) {
       }, this);
 
       this.reactGridLayout = render(
-        <GridLayout slices={this.slices} posDict={this.posDict} dashboard={dashboard} />,
+        <GridLayout slices={this.slices} posDict={this.posDict} dashboard={dashboard} isResizable={!readonly}/>,
         document.getElementById('grid-container')
       );
 
@@ -395,6 +395,6 @@ function dashboardContainer(dashboardData,urlParams) {
 }
 
 $(document).ready(() => {
-  dashboardContainer($('.dashboard').data('dashboard'),$('.dashboard').data('urlparams'));
+  dashboardContainer($('.dashboard').data('dashboard'),$('.dashboard').data('urlparams'),$('.dashboard').data('readonly'));
   $('[data-toggle="tooltip"]').tooltip({ container: 'body' });
 });

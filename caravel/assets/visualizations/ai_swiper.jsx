@@ -47,7 +47,7 @@ class AiSwiper extends React.Component{
         <div className="swiper-wrapper">
         {
             this.props.sldurls?JSON.parse(this.props.sldurls).map((aurl,aidx) => {
-              return <div className="swiper-slide"><iframe width="100%" height="100%" src={aurl} scrolling="no" frameborder="0"></iframe></div>
+              return <div className="swiper-slide"><iframe width="100%" height="100%" src={aurl} scrolling="no" frameBorder="0"></iframe></div>
             }):this.props.sliders.map((slider) => {
               return <div className="swiper-slide">{slider.name}</div>
             })

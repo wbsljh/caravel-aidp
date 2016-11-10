@@ -1646,6 +1646,7 @@ class Caravel(BaseCaravelView):
     @expose("/dashboard_read/<dashboard_id>/")
     def dashboard_read(self, dashboard_id):
         """Server side rendering for a dashboard"""
+        url_params_multidict = request.args  # MultiDict
         session = db.session()
         qry = session.query(models.Dashboard)
         if dashboard_id.isdigit():
@@ -1673,7 +1674,7 @@ class Caravel(BaseCaravelView):
         dash_edit_perm = False
         dash_save_perm = False
         return self.render_template(
-            "caravel/dashboard_read.html", dashboard=dash,
+            "caravel/dashboard_read.html", dashboard=dash,url_params=json.dumps(url_params_multidict),
             user_id=g.user.get_id(),
             templates=templates,
             dash_save_perm=dash_save_perm,
