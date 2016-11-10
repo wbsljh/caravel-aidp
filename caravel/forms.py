@@ -973,16 +973,6 @@ class FormFactory(object):
                     "Echart Options"
                     )
             }),
-            'horizon_color_scale': (SelectField, {
-                "label": _("Color Scale"),
-                "choices": (
-                    ('series', _('series')),
-                    ('overall', _('overall')),
-                    ('change', _('change')),
-                ),
-                "default": 'series',
-                "description": _("Defines how the color are attributed.")
-            }),
             'aiec3_map_type': (SelectField, {
                 "label": _("ECHART Map type"),
                 "choices": (
@@ -1044,31 +1034,37 @@ class FormFactory(object):
                 "description": "Default styling options"
             }),
             'aiswpier_pagination': (BetterBooleanField, {
-                "label": _("分页"),
+                "label": _("paging"),
                 "default": True,
-                "description": "是否分页"
+                "description": "show page or not"
             }),
             'aiswpier_direction': (FreeFormSelectField, {
-                "label": _("滑动方向"),
+                "label": _("slide direction"),
                 "choices": [
                     ("horizontal", "horizontal"),
                     ("vertical", "vertical"),
                 ],
-                "description": "设置水平或竖直滑动"
+                "description": "slide horizontally or vetically"
             }),
             'aiswpier_navi': (BetterBooleanField, {
-                "label": _("前后按钮"),
+                "label": _("slide button"),
                 "default": False,
-                "description": "是否通过前后按钮控制"
+                "description": "show button to switch to previous or next one "
             }),
             'aiswpier_urls': (TextAreaField, {
-                "label": _("自定义幻灯片页面"),
+                "label": _("define custom page url"),
                 "default": ''
             }),
             'aiswpier_defslide': (IntegerField, {
-                "label": _("默认幻灯片"),
+                "label": _("default slide index"),
                 "description": _(
-                    "默认展示的幻灯片，从0开始计数"),
+                    "set default slide index，count from 0"),
+                "default":0
+            }),
+            'aiswpier_interval': (IntegerField, {
+                "label": _("slide interval(ms)"),
+                "description": _(
+                    "set this field will cause the slide auto-play according to the defined interval"),
                 "default":0
             }),
             'widget': (SelectField, {

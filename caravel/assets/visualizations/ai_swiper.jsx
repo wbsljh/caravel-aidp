@@ -101,6 +101,13 @@ function aiSwiperWidget(slice) {
       if(fd.aiswpier_defslide){
         myswpOpt.initialSlide = fd.aiswpier_defslide;
       }
+      if(fd.aiswpier_interval&&fd.aiswpier_interval!=='0'){
+        myswpOpt.autoplay = fd.aiswpier_interval;
+        myswpOpt.loop = true;
+      }else{
+        myswpOpt.autoplay&&delete myswpOpt.autoplay;
+        myswpOpt.loop = false;
+      }
       
       mySwiper = new Swiper (mySwpCon,myswpOpt);
       
