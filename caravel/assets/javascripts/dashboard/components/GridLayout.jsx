@@ -34,7 +34,7 @@ class GridLayout extends React.Component {
         x: pos.col - 1,
         y: pos.row,
         w: pos.size_x,
-        minW: 2,
+        minW: 1,
         h: pos.size_y,
       });
     });
@@ -88,7 +88,7 @@ class GridLayout extends React.Component {
         onResizeStop={this.onResizeStop.bind(this)}
         onDragStop={this.onDragStop.bind(this)}
         cols={{ lg: 12, md: 12, sm: 10, xs: 8, xxs: 6 }}
-        rowHeight={5}
+        rowHeight={20}
         autoSize
         margin={[20, 20]}
         useCSSTransforms
