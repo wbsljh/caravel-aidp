@@ -102,7 +102,7 @@ function aiSwiperWidget(slice) {
         myswpOpt.initialSlide = fd.aiswpier_defslide;
       }
       if(fd.aiswpier_interval&&fd.aiswpier_interval!=='0'){
-        myswpOpt.autoplay = fd.aiswpier_interval;
+        myswpOpt.autoplay = fd.aiswpier_interval*1000;
         myswpOpt.loop = true;
       }else{
         myswpOpt.autoplay&&delete myswpOpt.autoplay;
