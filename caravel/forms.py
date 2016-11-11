@@ -42,8 +42,8 @@ class BetterBooleanField(BooleanField):
         html = super(BetterBooleanField, self).__call__(**kwargs)
         html += u'<input type="hidden" name="{}" value="false">'.format(self.name)
         return widgets.HTMLString(html)
-    
-    # add condition when the value is 'false' 
+
+    # add condition when the value is 'false'
     # by lanjh 2016/11/09
     def process_data(self, value):
         if value == u'false':
@@ -1106,7 +1106,26 @@ class FormFactory(object):
                 "choices": self.choicify(datasource.column_names),
                 "description": _("选择一个字段作为风向标, 风向标字段的值范围必须是：(e 东，s南, w 西, n 北, es 东南, en 东北, ws 西南, wn 西北)")
             }),
-
+            'aiec3_map_connected': (BetterBooleanField, {
+                "label": _("是否联动"),
+                "default": False,
+                "description": "如果设置为联动，当点击地图的某个区域时，会触发关联图表联动"
+            }),
+            'aiec3_map_looped': (BetterBooleanField, {
+                "label": _("是否轮播"),
+                "default": False,
+                "description": "如果设置为轮播， 会按设定的时间间隔， 顺序显示提示框"
+            }),
+            'aiec3_map_interval': (IntegerField, {
+                "label": _('interval'),
+                "default": 1000,
+                "description": "loop interval",
+            }),
+            'aiec3_map_connect_field': (TextField, {
+                "label": _('connect field'),
+                "default": '',
+                "description": "connect field",
+            }),
         }
 
         # Override default arguments with form overrides
