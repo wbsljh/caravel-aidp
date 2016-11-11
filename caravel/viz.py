@@ -2269,7 +2269,7 @@ class AiSwiperViz(BaseViz):
         'fields': ('aiswpier_urls',),
     }, {
         'label': _("Options"),
-        'fields': ('aiswpier_pagination','aiswpier_navi','aiswpier_direction','aiswpier_defslide')
+        'fields': ('aiswpier_pagination','aiswpier_navi','aiswpier_direction','aiswpier_defslide','aiswpier_interval')
     })
     form_overrides = ({
         'metrics': {

@@ -11,6 +11,7 @@ const propTypes = {
   dashboard: PropTypes.object.isRequired,
   slices: PropTypes.arrayOf(PropTypes.object).isRequired,
   posDict: PropTypes.object.isRequired,
+  isResizable:PropTypes.bool.isRequired,
 };
 
 class GridLayout extends React.Component {
@@ -87,11 +88,12 @@ class GridLayout extends React.Component {
         onResizeStop={this.onResizeStop.bind(this)}
         onDragStop={this.onDragStop.bind(this)}
         cols={{ lg: 12, md: 12, sm: 10, xs: 8, xxs: 6 }}
-        rowHeight={100}
+        rowHeight={5}
         autoSize
         margin={[20, 20]}
         useCSSTransforms
         draggableHandle=".drag"
+        isResizable={this.props.isResizable}
       >
         {
           /* eslint arrow-body-style: 0 */
