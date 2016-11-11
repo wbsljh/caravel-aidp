@@ -53,8 +53,8 @@ function Ec3MapWidget(slice) {
           c = c + 1;
         }
 
-        if (fd.aiec3_map_looped){
-          setInterval(showTip, fd.aiec3_map_interval*1000||1000);
+        if (fd.aiec3_map_interval > 0) {
+          setInterval(showTip, fd.aiec3_map_interval*1000);
         } else if (fd.aiec3_map_connected){
           chart.on('click', function (param){
             console.log('click params: ' + JSON.stringify(param));

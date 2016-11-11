@@ -1107,14 +1107,14 @@ class FormFactory(object):
                 "default": False,
                 "description": "如果设置为联动，当点击地图的某个区域时，会触发关联图表联动"
             }),
-            'aiec3_map_looped': (BetterBooleanField, {
-                "label": _("是否轮播"),
-                "default": False,
-                "description": "如果设置为轮播， 会按设定的时间间隔， 顺序显示提示框"
-            }),
+            #'aiec3_map_looped': (BetterBooleanField, {
+            #    "label": _("是否轮播"),
+            #    "default": False,
+            #    "description": "如果设置为轮播， 会按设定的时间间隔， 顺序显示提示框"
+            #}),
             'aiec3_map_interval': (IntegerField, {
                 "label": _('interval'),
-                "default": 1000,
+                "default": 0,
                 "description": "loop interval",
             }),
             'aiec3_map_connect_field': (TextField, {
