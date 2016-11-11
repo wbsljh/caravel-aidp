@@ -50,7 +50,7 @@ function Ec3MapWidget(slice) {
               slice.setFilter(fd.aiec3_map_connect_field, vals);
             }
           }
-          c = c + 1;
+          c = c + 1 >= chart_options.series[0].data.length ? 0 : c + 1;
         }
 
         if (fd.aiec3_map_interval > 0) {
