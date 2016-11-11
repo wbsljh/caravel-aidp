@@ -2107,7 +2107,10 @@ class Ec3MapViz(Ec3Viz):
         'label': _("Echart Options参数设置"),
         'description': _('Echart Options参数设置'),
         'fields': (
-            'aiec3_map_type','aiec3_map_type_name','aiec3_map_file','aiec3_options'
+            'aiec3_map_type', 'aiec3_map_type_name', 'aiec3_map_file',
+            ('aiec3_map_connected', 'aiec3_map_interval',),
+            'aiec3_map_connect_field',
+            'aiec3_options',
         )
     })
 
