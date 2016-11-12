@@ -33,6 +33,8 @@ from caravel import app, utils, cache, db
 from caravel.forms import FormFactory, SelectMultipleSortableField
 from caravel.utils import flasher
 
+from .utils import ExpressionDecoder
+
 config = app.config
 
 
@@ -254,7 +256,7 @@ class BaseViz(object):
         # extras are used to query elements specific to a datasource type
         # for instance the extra where clause that applies only to Tables
         extras = {
-            'where': form_data.get("where", ''),
+            'where': ExpressionDecoder(form_data.get("where", '')).decode(),
             'having': form_data.get("having", ''),
             'having_druid': self.query_filters(is_having_filter=True),
             'time_grain_sqla': form_data.get("time_grain_sqla", ''),
