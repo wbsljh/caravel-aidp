@@ -478,7 +478,7 @@ class timeout(object):
 
 class ExpressionDecoder(object):
 
-    REGEXP = '\{\$([(a-z)|(A-Z)|\-|\d]+)\}'
+    REGEXP = '\{\$([(a-z)|(A-Z)|\-|\+|\d]+)\}'
 
     TODAY = date.today()
     CUR_YEAR = TODAY.year
@@ -503,34 +503,33 @@ class ExpressionDecoder(object):
     def _parse(self, var):
         var_opr = re.findall('[+-]', var)[0]
         var_param = var.split('+') if var_opr == '+' else var.split('-')
-        print('var_param: {}'.format(var_param))
         if var_param[0] == 'year':
             value = self.CUR_YEAR + int(var_param[1]) if var_opr == '+' else self.CUR_YEAR - int(var_param[1])
         elif var_param[0] == 'quarter':
             m = self.CUR_QUARTER + int(var_param[1]) if var_opr == '+' else self.CUR_QUARTER - int(var_param[1])
             y = self.CUR_YEAR
             l = 4
-            if m <= 0:
-                while m > 0:
-                    m = m + l
-                    y = y - 1
-            if m > l:
-                while m <= l:
-                    m = m - l
-                    y = y + 1
+            # if m <= 0:
+            while m <= 0:
+                m = m + l
+                y = y - 1
+            # if m > l:
+            while m > l:
+                m = m - l
+                y = y + 1
             value = '%s%02d'%(y, m)
         elif var_param[0] == 'month':
             m = self.CUR_MONTH + int(var_param[1]) if var_opr == '+' else self.CUR_MONTH - int(var_param[1])
             y = self.CUR_YEAR
             l = 12
-            if m <= 0:
-                while m > 0:
-                    m = m + l
-                    y = y - 1
-            if m > l:
-                while m <= l:
-                    m = m - l
-                    y = y + 1
+            # if m <= 0:
+            while m <= 0:
+                m = m + l
+                y = y - 1
+            # if m > l:
+            while m > l:
+                m = m - l
+                y = y + 1
             value = '%s%02d'%(y, m)
         elif var_param[0] == 'day':
             value = self.TODAY + timedelta(days = int(var_param[1])) if \
