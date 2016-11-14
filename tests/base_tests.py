@@ -1,29 +1,42 @@
-"""Unit tests for Caravel"""
+"""Unit tests for Superset"""
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import imp
+import json
 import os
 import unittest
 
 from flask_appbuilder.security.sqla import models as ab_models
 
-import caravel
-from caravel import app, db, models, utils, appbuilder, sm
+import superset
+from superset import app, db, models, utils, appbuilder, sm
 
-os.environ['CARAVEL_CONFIG'] = 'tests.caravel_test_config'
+os.environ['SUPERSET_CONFIG'] = 'tests.superset_test_config'
 
 BASE_DIR = app.config.get("BASE_DIR")
+cli = imp.load_source('cli', BASE_DIR + "/bin/superset")
 
 
-class CaravelTestCase(unittest.TestCase):
+class SupersetTestCase(unittest.TestCase):
+    requires_examples = False
+    examples_loaded = False
 
     def __init__(self, *args, **kwargs):
-        super(CaravelTestCase, self).__init__(*args, **kwargs)
+        if (
+                self.requires_examples and
+                not os.environ.get('SOLO_TEST') and
+                not os.environ.get('examples_loaded')
+            ):
+            cli.load_examples(load_test_data=True)
+            utils.init(superset)
+            os.environ['examples_loaded'] = '1'
+        super(SupersetTestCase, self).__init__(*args, **kwargs)
         self.client = app.test_client()
         self.maxDiff = None
-        utils.init(caravel)
+        utils.init(superset)
 
         admin = appbuilder.sm.find_user('admin')
         if not admin:
@@ -67,7 +80,13 @@ class CaravelTestCase(unittest.TestCase):
             session.add(druid_datasource2)
             session.commit()
 
-        utils.init(caravel)
+        utils.init(superset)
+
+    def get_or_create(self, cls, criteria, session):
+        obj = session.query(cls).filter_by(**criteria).first()
+        if not obj:
+            obj = cls(**criteria)
+        return obj
 
     def login(self, username='admin', password='general'):
         resp = self.client.post(
@@ -92,21 +111,54 @@ class CaravelTestCase(unittest.TestCase):
         session.close()
         return query
 
+    def get_slice(self, slice_name, session):
+        slc = (
+            session.query(models.Slice)
+            .filter_by(slice_name=slice_name)
+            .one()
+        )
+        session.expunge_all()
+        return slc
+
+    def get_table_by_name(self, name):
+        return db.session.query(models.SqlaTable).filter_by(
+            table_name=name).first()
+
+    def get_druid_ds_by_name(self, name):
+        return db.session.query(models.DruidDatasource).filter_by(
+            datasource_name=name).first()
+
+    def get_resp(self, url):
+        """Shortcut to get the parsed results while following redirects"""
+        resp = self.client.get(url, follow_redirects=True)
+        return resp.data.decode('utf-8')
+
+    def get_json_resp(self, url):
+        """Shortcut to get the parsed results while following redirects"""
+        resp = self.get_resp(url)
+        return json.loads(resp)
+
+    def get_main_database(self, session):
+        return (
+            db.session.query(models.Database)
+            .filter_by(database_name='main')
+            .first()
+        )
+
     def get_access_requests(self, username, ds_type, ds_id):
-            return db.session.query(models.DatasourceAccessRequest).filter(
-                models.DatasourceAccessRequest.created_by_fk ==
-                sm.find_user(username=username).id,
-                models.DatasourceAccessRequest.datasource_type == ds_type,
-                models.DatasourceAccessRequest.datasource_id == ds_id
-            ).all()
+            DAR = models.DatasourceAccessRequest
+            return (
+                db.session.query(DAR)
+                .filter(
+                    DAR.created_by == sm.find_user(username=username),
+                    DAR.datasource_type == ds_type,
+                    DAR.datasource_id == ds_id,
+                )
+                .first()
+            )
 
     def logout(self):
         self.client.get('/logout/', follow_redirects=True)
-
-    def test_welcome(self):
-        self.login()
-        resp = self.client.get('/caravel/welcome')
-        assert 'Welcome' in resp.data.decode('utf-8')
 
     def setup_public_access_for_dashboard(self, table_name):
         public_role = appbuilder.sm.find_role('Public')
@@ -123,3 +175,14 @@ class CaravelTestCase(unittest.TestCase):
             if (perm.permission.name == 'datasource_access' and
                     perm.view_menu and table_name in perm.view_menu.name):
                 appbuilder.sm.del_permission_role(public_role, perm)
+
+    def run_sql(self, sql, user_name, client_id):
+        self.login(username=(user_name if user_name else 'admin'))
+        dbid = self.get_main_database(db.session).id
+        resp = self.client.post(
+            '/superset/sql_json/',
+            data=dict(database_id=dbid, sql=sql, select_as_create_as=False,
+                      client_id=client_id),
+        )
+        self.logout()
+        return json.loads(resp.data.decode('utf-8'))
