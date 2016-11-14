@@ -1070,7 +1070,7 @@ class FormFactory(object):
                 "default":0
             }),
             'aiswpier_interval': (IntegerField, {
-                "label": _("slide interval(ms)"),
+                "label": _("slide interval(s)"),
                 "description": _(
                     "set this field will cause the slide auto-play according to the defined interval"),
                 "default":0
