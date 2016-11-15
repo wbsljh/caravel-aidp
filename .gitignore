@@ -13,8 +13,8 @@ build
 *.db
 tmp
 /dist/
-/caravel/assets/dist
-superset_config.py
+/superset/assets/dist
+#superset_config.py
 local_config.py
 env
 dist
@@ -27,12 +27,12 @@ app.db
 # Node.js, webpack artifacts
 *.entry.js
 *.js.map
-/caravel/assets/node_modules/*
-!/caravel/assets/node_modules/font-awesome
-!/caravel/assets/node_modules/echarts-2.2.7
+/superset/assets/node_modules/*
+!/superset/assets/node_modules/font-awesome
+!/superset/assets/node_modules/echarts-2.2.7
 npm-debug.log
 .pydevproject
 .project
 .settings/
-/caravel/app/static/uploads/*
+/superset/app/static/uploads/*
 yarn.lock

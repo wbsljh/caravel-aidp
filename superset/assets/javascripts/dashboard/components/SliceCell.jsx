@@ -56,6 +56,7 @@ function SliceCell({ expandedSlices, removeSlice, slice }) {
               </a>
             </div>
           </div>
+          }
         </div>
       </div>
       <div

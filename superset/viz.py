@@ -55,7 +55,7 @@ class BaseViz(object):
     form_overrides = {}
 
     def __init__(self, datasource, form_data, slice_=None):
-        self.url_prefix = '/caravel/explore'
+        self.url_prefix = ''
         self.orig_form_data = form_data
         if not datasource:
             raise Exception("Viz is missing a datasource")
@@ -148,12 +148,11 @@ class BaseViz(object):
         if json_endpoint:
             base_endpoint = '/superset/explore_json'
 
+        if self.url_prefix:
+            base_endpoint = self.url_prefix
+
         href = Href(
-<<<<<<< HEAD:caravel/viz.py
-            '{self.url_prefix}/{self.datasource.type}/'
-=======
             '{base_endpoint}/{self.datasource.type}/'
->>>>>>> airbnb/master:superset/viz.py
             '{self.datasource.id}/'.format(**locals()))
         if for_cache_key and 'force' in od:
             del od['force']
@@ -449,13 +448,8 @@ class TableViz(BaseViz):
         if fd.get('all_columns'):
             d['columns'] = fd.get('all_columns')
             d['groupby'] = []
-<<<<<<< HEAD:caravel/viz.py
-            if fd.get('order_by_cols', []):
-                d['orderby'] = [json.loads(t) for t in fd.get('order_by_cols', [])]
-=======
             order_by_cols = fd.get('order_by_cols', []) or []
             d['orderby'] = [json.loads(t) for t in order_by_cols]
->>>>>>> airbnb/master:superset/viz.py
         return d
 
     def get_df(self, query_obj=None):

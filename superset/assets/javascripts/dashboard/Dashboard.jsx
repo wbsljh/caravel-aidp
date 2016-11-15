@@ -40,7 +40,7 @@ function initDashboardView(dashboard) {
   );
   // eslint-disable-next-line no-param-reassign
   dashboard.reactGridLayout = render(
-    <GridLayout dashboard={dashboard} isResizable={!readonly}/>,
+    <GridLayout dashboard={dashboard} isResizable={!dashboard.context.readonly}/>,
     document.getElementById('grid-container')
   );
 
@@ -74,7 +74,7 @@ function initDashboardView(dashboard) {
   $('[data-toggle="tooltip"]').tooltip({ container: 'body' });
 }
 
-function dashboardContainer(dashboard, urlParams, readonly) {
+function dashboardContainer(dashboard) {
   return Object.assign({}, dashboard, {
     type: 'dashboard',
     filters: {},
@@ -98,11 +98,13 @@ function dashboardContainer(dashboard, urlParams, readonly) {
     },
     loadPreSelectFilters() {
       //set globe params,which sliceid was fixed to 0
-      for (const param in urlParams){
-        //'preselect_filters' exluded for been used in filter_box 
-        if(param&&param!=='preselect_filters'){
-          this.setFilter(0, param, urlParams[param], false, false);
-        }        
+      if ('urlparams' in dashboard.context) {
+        for (const param in dashboard.context.urlparams) {
+          //'preselect_filters' exluded for been used in filter_box 
+          if(param && param !== 'preselect_filters') {
+            this.setFilter(0, param, dashboard.context.urlparams[param], false, false);
+          }        
+        }
       }
 
       try {
@@ -312,14 +314,13 @@ $(document).ready(() => {
   // Getting bootstrapped data from the DOM
   const dashboardData = $('.dashboard').data('dashboard');
   const contextData = $('.dashboard').data('context');
-  //add by aidp
-  const urlparams = $('.dashboard').data('urlparams');
-  const readonly = $('.dashboard').data('readonly');
 
-  const state = getInitialState(dashboardData, contextData, urlparams, readonly);
+  console.log('dashbord context: ' + JSON.stringify(contextData))
+  const state = getInitialState(dashboardData, contextData);
   // const dashboard = dashboardContainer(state.dashboard);
   // add two param by aidp
-  const dashboard = dashboardContainer(state.dashboard, state.urlParams, state.readonly);
+  console.log('after getInitialState state.dashboard: ' + JSON.stringify(state.dashboard))
+  const dashboard = dashboardContainer(state.dashboard);
   initDashboardView(dashboard);
   dashboard.init();
 });

@@ -1254,7 +1254,7 @@ class Superset(BaseSupersetView):
         viz_obj = self.get_viz(slice_id)
         return redirect(viz_obj.get_url(**request.args))
 
-    @has_access_api
+    # @has_access_api
     @expose("/explore_json/<datasource_type>/<datasource_id>/")
     def explore_json(self, datasource_type, datasource_id):
         try:
@@ -1346,107 +1346,6 @@ class Superset(BaseSupersetView):
         # slc perms
         slice_add_perm = self.can_access('can_add', 'SliceModelView')
         slice_edit_perm = check_ownership(slc, raise_if_false=False)
-
-        slice_download_perm = self.can_access('can_download', 'SliceModelView')
-
-        # handle save or overwrite
-        action = slice_params_multi_dict.get('action')
-        if action in ('saveas', 'overwrite'):
-            return self.save_or_overwrite_slice(
-                slice_params_multi_dict, slc, slice_add_perm, slice_edit_perm)
-
-        # handle different endpoints
-        if slice_params_multi_dict.get("json") == "true":
-            if config.get("DEBUG"):
-                # Allows for nice debugger stack traces in debug mode
-                return Response(
-                    viz_obj.get_json(),
-                    status=200,
-                    mimetype="application/json")
-            try:
-                return Response(
-                    viz_obj.get_json(),
-                    status=200,
-                    mimetype="application/json")
-            except Exception as e:
-                logging.exception(e)
-                return json_error_response(utils.error_msg_from_exception(e))
-
-        elif slice_params_multi_dict.get("csv") == "true":
-            payload = viz_obj.get_csv()
-            return Response(
-                payload,
-                status=200,
-                headers=generate_download_headers("csv"),
-                mimetype="application/csv")
-        else:
-            if slice_params_multi_dict.get("standalone") == "true":
-                template = "caravel/standalone.html"
-            else:
-                template = "caravel/explore.html"
-            return self.render_template(
-                template, viz=viz_obj, slice=slc, datasources=datasources,
-                can_add=slice_add_perm, can_edit=slice_edit_perm,
-                can_download=slice_download_perm,
-                userid=g.user.get_id() if g.user else '')
-
-    @expose("/explore_read/<datasource_type>/<datasource_id>/<slice_id>/")
-    @expose("/explore_read/<datasource_type>/<datasource_id>/")
-    @log_this
-    def explore_read(self, datasource_type, datasource_id, slice_id=None):
-        error_redirect = '/slicemodelview/list/'
-        datasource_class = SourceRegistry.sources[datasource_type]
-        datasources = db.session.query(datasource_class).all()
-        datasources = sorted(datasources, key=lambda ds: ds.full_name)
-        datasource = [ds for ds in datasources if int(datasource_id) == ds.id]
-        datasource = datasource[0] if datasource else None
-
-        if not datasource:
-            flash(DATASOURCE_MISSING_ERR, "alert")
-            return redirect(error_redirect)
-        # modify by ljh 20161011
-        # if not self.datasource_access(datasource):
-        #     flash(
-        #         __(get_datasource_access_error_msg(datasource.name)), "danger")
-        #     return redirect('caravel/request_access_form/{}/{}/{}'.format(
-        #         datasource_type, datasource_id, datasource.name))
-
-        request_args_multi_dict = request.args  # MultiDict
-
-        slice_id = slice_id or request_args_multi_dict.get("slice_id")
-        slc = None
-        # build viz_obj and get it's params
-        if slice_id:
-            slc = db.session.query(models.Slice).filter_by(id=slice_id).first()
-            try:
-                viz_obj = slc.get_viz(
-                    url_params_multidict=request_args_multi_dict)
-            except Exception as e:
-                logging.exception(e)
-                flash(utils.error_msg_from_exception(e), "danger")
-                return redirect(error_redirect)
-        else:
-            viz_type = request_args_multi_dict.get("viz_type")
-            if not viz_type and datasource.default_endpoint:
-                return redirect(datasource.default_endpoint)
-            # default to table if no default endpoint and no viz_type
-            viz_type = viz_type or "table"
-            # validate viz params
-            try:
-                viz_obj = viz.viz_types[viz_type](
-                    datasource, request_args_multi_dict)
-            except Exception as e:
-                logging.exception(e)
-                flash(utils.error_msg_from_exception(e), "danger")
-                return redirect(error_redirect)
-        slice_params_multi_dict = ImmutableMultiDict(viz_obj.orig_form_data)
-
-        # slc perms
-        slice_add_perm = self.can_access('can_add', 'SliceModelView')
-        # modify by ljh 20161011
-        # slice_edit_perm = check_ownership(slc, raise_if_false=False)
-        slice_edit_perm = hasattr(g.user, 'username') and check_ownership(slc, raise_if_false=False)
-
         slice_download_perm = self.can_access('can_download', 'SliceModelView')
 
         # handle save or overwrite
@@ -1791,61 +1690,9 @@ class Superset(BaseSupersetView):
             json.dumps({'count': count}),
             mimetype="application/json")
 
-    @has_access
-    @expose("/dashboard/<dashboard_id>/")
-    def dashboard(self, dashboard_id):
-        """Server side rendering for a dashboard"""
-
-        #
-        url_params_multidict = request.args  # MultiDict
-
-        session = db.session()
-        qry = session.query(models.Dashboard)
-        if dashboard_id.isdigit():
-            qry = qry.filter_by(id=int(dashboard_id))
-        else:
-            qry = qry.filter_by(slug=dashboard_id)
-
-        dash = qry.one()
-        datasources = {slc.datasource for slc in dash.slices}
-        for datasource in datasources:
-            if not self.datasource_access(datasource):
-                flash(
-                    __(get_datasource_access_error_msg(datasource.name)),
-                    "danger")
-                return redirect(
-                    'superset/request_access/?'
-                    'dashboard_id={dash.id}&'
-                    ''.format(**locals()))
-
-        # Hack to log the dashboard_id properly, even when getting a slug
-        @log_this
-        def dashboard(**kwargs):  # noqa
-            pass
-        dashboard(dashboard_id=dash.id)
-        dash_edit_perm = check_ownership(dash, raise_if_false=False)
-        dash_save_perm = \
-            dash_edit_perm and self.can_access('can_save_dash', 'Superset')
-        standalone = request.args.get("standalone") == "true"
-        context = dict(
-            user_id=g.user.get_id(),
-            dash_save_perm=dash_save_perm,
-            dash_edit_perm=dash_edit_perm,
-            standalone_mode=standalone,
-        )
-        return self.render_template(
-            "superset/dashboard.html",
-            dashboard=dash,
-            context=json.dumps(context),
-        )
-
     @expose("/dashboard_read/<dashboard_id>/")
     def dashboard_read(self, dashboard_id):
         """Server side rendering for a dashboard"""
-
-        #
-        url_params_multidict = request.args  # MultiDict
-
         session = db.session()
         qry = session.query(models.Dashboard)
         if dashboard_id.isdigit():
@@ -1854,9 +1701,10 @@ class Superset(BaseSupersetView):
             qry = qry.filter_by(slug=dashboard_id)
 
         dash = qry.one()
+
         # 增加readonly参数
         for slice in dash.slices:
-            slice.viz.url_prefix = '/caravel/explore_read'
+            slice.viz.url_prefix = '/superset/explore_json'
             slice.viz.form_data['readonly'] = 'true'
 
         datasources = {slc.datasource for slc in dash.slices}
@@ -1884,9 +1732,63 @@ class Superset(BaseSupersetView):
             dash_save_perm=dash_save_perm,
             dash_edit_perm=dash_edit_perm,
             standalone_mode=standalone,
+            # add by aidp
+            urlparams=json.dumps(request.args),
+            readonly=True,
         )
+
+        print('context...: {}'.format(context))
+
         return self.render_template(
             "superset/dashboard_read.html",
+            dashboard=dash,
+            context=json.dumps(context),
+        )
+
+    @has_access
+    @expose("/dashboard/<dashboard_id>/")
+    def dashboard(self, dashboard_id):
+        """Server side rendering for a dashboard"""
+        session = db.session()
+        qry = session.query(models.Dashboard)
+        if dashboard_id.isdigit():
+            qry = qry.filter_by(id=int(dashboard_id))
+        else:
+            qry = qry.filter_by(slug=dashboard_id)
+
+        dash = qry.one()
+        datasources = {slc.datasource for slc in dash.slices}
+        for datasource in datasources:
+            if not self.datasource_access(datasource):
+                flash(
+                    __(get_datasource_access_error_msg(datasource.name)),
+                    "danger")
+                return redirect(
+                    'superset/request_access/?'
+                    'dashboard_id={dash.id}&'
+                    ''.format(**locals()))
+
+        # Hack to log the dashboard_id properly, even when getting a slug
+        @log_this
+        def dashboard(**kwargs):  # noqa
+            pass
+        dashboard(dashboard_id=dash.id)
+        dash_edit_perm = check_ownership(dash, raise_if_false=False)
+        dash_save_perm = \
+            dash_edit_perm and self.can_access('can_save_dash', 'Superset')
+        standalone = request.args.get("standalone") == "true"
+        context = dict(
+            user_id=g.user.get_id(),
+            dash_save_perm=dash_save_perm,
+            dash_edit_perm=dash_edit_perm,
+            standalone_mode=standalone,
+            # add by aidp
+            urlparams=json.dumps(request.args),
+            readonly=False,
+        )
+
+        return self.render_template(
+            "superset/dashboard.html",
             dashboard=dash,
             context=json.dumps(context),
         )
@@ -2463,7 +2365,7 @@ appbuilder.add_view(
     category_label=__("Manage"),
     category_icon='')
 
-class ResourceCategoryModelView(CaravelModelView, DeleteMixin):
+class ResourceCategoryModelView(SupersetModelView, DeleteMixin):
     datamodel = SQLAInterface(models.ResourceCategory)
     label_columns = {'name': 'Name'}
     list_columns = ['id', 'name']
@@ -2471,7 +2373,7 @@ class ResourceCategoryModelView(CaravelModelView, DeleteMixin):
     edit_columns = ['name']
     add_columns = edit_columns
 
-class ResourceModelView(CaravelModelView, DeleteMixin):
+class ResourceModelView(SupersetModelView, DeleteMixin):
     datamodel = SQLAInterface(models.Resource)
     label_columns = {'file_name': '文件名', 'download': '下载'}
     list_columns = ['category', 'name', 'url']
