@@ -108,14 +108,14 @@ function Ec3BarLineWidget(slice) {
     //get default_serie
     let default_serie = {};
     if (chart_options.series.length == 1) {
-      default_serie = chart_options.series[0];
+      Object.assign(default_serie, chart_options.series[0]) 
     }
     //init series data
     if (chart_options.series.length <= 1) {
       for (let i = 0; i < metrics.length; i++) {
         let metric = metrics[i];
         // if there is only one serie
-        let serie = default_serie;
+        let serie = Object.assign({}, default_serie);
         if (!('name' in serie)) {
           serie.name = metric;
         }
