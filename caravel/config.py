@@ -235,6 +235,8 @@ DEFAULT_DB_ID = None
 # Timeout duration for SQL Lab synchronous queries
 SQLLAB_TIMEOUT = 30
 
+RES_PATH = 'http://192.168.0.36:8088'
+
 try:
     from .caravel_config import *  # noqa
 except ImportError:

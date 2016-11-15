@@ -6,7 +6,7 @@ function Ec3BarLineWidget(slice) {
   function getDefaultOptions(vizType) {
     let chart_options = {};
     switch (vizType) {
-      case 'ec3_barline':
+      case 'ec3_bar':
         chart_options = {
           xAxis: [{
             type: 'category'
@@ -16,6 +16,19 @@ function Ec3BarLineWidget(slice) {
           }],
           series: [{
             type: 'bar'
+          }]
+        };
+        break;
+      case 'ec3_line':
+        chart_options = {
+          xAxis: [{
+            type: 'category'
+          }],
+          yAxis: [{
+            type: 'value'
+          }],
+          series: [{
+            type: 'line'
           }]
         };
         break;
@@ -72,7 +85,7 @@ function Ec3BarLineWidget(slice) {
       if (fd.viz_type != 'ec3_map'&&!('yAxis' in chart_options)){
         chart_options.yAxis = [{type: 'value'}];
       }
- 
+
     }
     //add data to echart_options
     let legend_data = [];
@@ -119,7 +132,7 @@ function Ec3BarLineWidget(slice) {
           };
 
           // add wind direction
-          if (fd.ec3_wind_direction != null) {
+          if (fd.ec3_wind_direction != null && fd.ec3_wind_direction != '') {
             _item['symbol'] = 'arrow';
             _item['symbolRotate'] = getSymbolRotate(d[fd.ec3_wind_direction]);
           }
@@ -137,7 +150,7 @@ function Ec3BarLineWidget(slice) {
         let serie_data = [];
 
         legend_data.push(metric);
-        
+
         if (!('name' in chart_options.series[i])) {
           chart_options.series[i].name = metric;
         }
@@ -151,7 +164,7 @@ function Ec3BarLineWidget(slice) {
               value
             };
             // add wind direction
-            if (fd.ec3_wind_direction != null) {
+            if (fd.ec3_wind_direction != null && fd.ec3_wind_direction != '') {
               _item['symbol'] = 'arrow';
               _item['symbolRotate'] = getSymbolRotate(d[fd.ec3_wind_direction]);
             }
