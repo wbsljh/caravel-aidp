@@ -5,7 +5,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 from builtins import object
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 import decimal
 import functools
 import json
@@ -13,6 +13,7 @@ import logging
 import numpy
 import signal
 import uuid
+import re
 
 import parsedatetime
 import sqlalchemy as sa
@@ -40,6 +41,9 @@ class CaravelSecurityException(CaravelException):
 
 
 class MetricPermException(Exception):
+    pass
+
+class ExpressionException(Exception):
     pass
 
 
@@ -471,3 +475,66 @@ class timeout(object):
         except ValueError as e:
             logging.warning("timeout can't be used in the current context")
             logging.exception(e)
+
+class ExpressionDecoder(object):
+
+    REGEXP = '\{\$([(a-z)|(A-Z)|\-|\+|\d]+)\}'
+
+    TODAY = date.today()
+    CUR_YEAR = TODAY.year
+    CUR_MONTH = TODAY.month
+    CUR_DAY = TODAY.day
+    CUR_QUARTER = CUR_MONTH / 4 + 1
+
+    EXP_PREFIX = '{$'
+    EXP_SUFFIX = '}'
+
+    def __init__(self, raw_str):
+        self.raw_str = raw_str
+        self.out_str = raw_str
+        # pattern = re.compile(REGEXP)
+        self.var_list = re.findall(self.REGEXP, self.raw_str)
+
+    def decode(self):
+        for var in self.var_list:
+            self.out_str = self.out_str.replace('%s%s%s'%(self.EXP_PREFIX, var, self.EXP_SUFFIX), self._parse(var))
+        return self.out_str
+
+    def _parse(self, var):
+        var_opr = re.findall('[+-]', var)[0]
+        var_param = var.split('+') if var_opr == '+' else var.split('-')
+        if var_param[0] == 'year':
+            value = self.CUR_YEAR + int(var_param[1]) if var_opr == '+' else self.CUR_YEAR - int(var_param[1])
+        elif var_param[0] == 'quarter':
+            m = self.CUR_QUARTER + int(var_param[1]) if var_opr == '+' else self.CUR_QUARTER - int(var_param[1])
+            y = self.CUR_YEAR
+            l = 4
+            # if m <= 0:
+            while m <= 0:
+                m = m + l
+                y = y - 1
+            # if m > l:
+            while m > l:
+                m = m - l
+                y = y + 1
+            value = '%s%02d'%(y, m)
+        elif var_param[0] == 'month':
+            m = self.CUR_MONTH + int(var_param[1]) if var_opr == '+' else self.CUR_MONTH - int(var_param[1])
+            y = self.CUR_YEAR
+            l = 12
+            # if m <= 0:
+            while m <= 0:
+                m = m + l
+                y = y - 1
+            # if m > l:
+            while m > l:
+                m = m - l
+                y = y + 1
+            value = '%s%02d'%(y, m)
+        elif var_param[0] == 'day':
+            value = self.TODAY + timedelta(days = int(var_param[1])) if \
+            var_opr == '+' else self.TODAY - timedelta(days = int(var_param[1]))
+            value = value.strftime('%Y%m%d')
+        else:
+            raise ExpressionException('expression error')
+        return value
