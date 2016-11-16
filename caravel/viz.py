@@ -33,6 +33,8 @@ from caravel import app, utils, cache, db
 from caravel.forms import FormFactory, SelectMultipleSortableField
 from caravel.utils import flasher
 
+from .utils import ExpressionDecoder
+
 config = app.config
 
 
@@ -254,7 +256,7 @@ class BaseViz(object):
         # extras are used to query elements specific to a datasource type
         # for instance the extra where clause that applies only to Tables
         extras = {
-            'where': form_data.get("where", ''),
+            'where': ExpressionDecoder(form_data.get("where", '')).decode(),
             'having': form_data.get("having", ''),
             'having_druid': self.query_filters(is_having_filter=True),
             'time_grain_sqla': form_data.get("time_grain_sqla", ''),
@@ -2014,6 +2016,29 @@ class Ec3Viz(BaseViz):
         },
     })
 
+    def __init__(self, datasource, form_data, slice_=None):
+        # include all columns
+        all_order_by_choices = []
+        for s in sorted(datasource.groupby_column_names):
+            all_order_by_choices.append((json.dumps([s, True]), s + ' [asc]'))
+            all_order_by_choices.append((json.dumps([s, False]), s + ' [desc]'))
+
+        self.form_overrides = ({
+            'metrics': ({
+                "label": _("Metrics"),
+                "choices": FormFactory.choicify(datasource.column_names) + datasource.metrics_combo,
+                "default": [],
+                "description": _("One or many metrics to display")
+            }),
+            'order_by_cols': ({
+                "label": _("Ordering"),
+                "choices": all_order_by_choices,
+                "description": _("One or many metrics to display")
+            }),
+        })
+        super(Ec3Viz, self).__init__(datasource, form_data, slice_)
+
+
     def query_obj(self):
         d = super(Ec3Viz, self).query_obj()
         fd = self.form_data
@@ -2052,50 +2077,37 @@ class Ec3Viz(BaseViz):
         return json.dumps(obj, default=utils.json_iso_dttm_ser)
 
 
-class Ec3BarLineViz(Ec3Viz):
+class Ec3LineViz(Ec3Viz):
 
     """A basic html table that is sortable and searchable"""
 
-    viz_type = "ec3_barline"
-    verbose_name = _("Ec3_BarLine_Viz")
+    viz_type = "ec3_line"
+    verbose_name = _("AI线图")
     credits = ''
     is_timeseries = False
 
-    def __init__(self, datasource, form_data, slice_=None):
-        self.form_overrides = ({
-            'metrics': ({
-                "label": _("Metrics"),
-                "choices": FormFactory.choicify(datasource.column_names) + datasource.metrics_combo,
-                "default": [],
-                "description": _("One or many metrics to display")
-            })
-        })
-        super(Ec3BarLineViz, self).__init__(datasource, form_data, slice_)
+class Ec3BarViz(Ec3Viz):
+
+    """A basic html table that is sortable and searchable"""
+
+    viz_type = "ec3_bar"
+    verbose_name = _("AI柱图")
+    credits = ''
+    is_timeseries = False
 
 class Ec3PieViz(Ec3Viz):
 
     viz_type = "ec3_pie"
-    verbose_name = _("Ec3_Pie_Viz")
+    verbose_name = _("AI饼图")
     credits = ''
     is_timeseries = False
-
-    def __init__(self, datasource, form_data, slice_=None):
-        self.form_overrides = ({
-            'metrics': ({
-                    "label": _("Metrics"),
-                    "choices": FormFactory.choicify(datasource.column_names) + datasource.metrics_combo,
-                    "default": [],
-                    "description": _("One or many metrics to display")
-                })
-        })
-        super(Ec3PieViz, self).__init__(datasource, form_data, slice_)
 
 class Ec3MapViz(Ec3Viz):
 
     """A basic html table that is sortable and searchable"""
 
     viz_type = "ec3_map"
-    verbose_name = _("Ec3_Map_Viz")
+    verbose_name = _("AI地图")
     credits = ''
     is_timeseries = False
 
@@ -2179,6 +2191,7 @@ class AiMarkupViz(TableViz):
         context = dict(
             records=df.to_dict(orient="records"),
             columns=list(df.columns),
+            RES_PATH=config.get('RES_PATH'),
         )
         if len(df) == 1:
             context.update(df.iloc[0].to_dict())
@@ -2425,7 +2438,8 @@ class AiIntervalRefreshFilterViz(BaseViz):
         return d
 
 viz_types_list = [
-    Ec3BarLineViz,
+    Ec3LineViz,
+    Ec3BarViz,
     Ec3PieViz,
     Ec3MapViz,
     AiMarkupViz,
