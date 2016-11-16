@@ -336,6 +336,10 @@ class Dashboard(Model, AuditMixinNullable):
         return ", ".join({"{}".format(s.datasource) for s in self.slices})
 
     @property
+    def css_jinja(self):
+        return self.css.replace("{{RES_PATH}}",config.get('RES_PATH'));
+
+    @property
     def url(self):
         return "/caravel/dashboard/{}/".format(self.slug or self.id)
 
