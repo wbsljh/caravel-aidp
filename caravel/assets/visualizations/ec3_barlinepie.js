@@ -71,6 +71,19 @@ function Ec3BarLineWidget(slice) {
     }
   }
 
+  function uniqueArray(arr) {
+    let result = [],
+        len = arr.length,
+        item, i;
+    for (i = 0; i < len; i++) {
+        item = arr[i];
+        if (result.indexOf(item) === -1) {
+            result.push(item);
+        }
+    }
+    return result;
+  }
+
   function getOptions(payload) {
     // get init echart_options
     let fd = payload.form_data;
@@ -79,107 +92,159 @@ function Ec3BarLineWidget(slice) {
       chart_options = getDefaultOptions(fd.viz_type);
     } else {
       chart_options = eval('(' + fd.aiec3_options + ')');
-      if (fd.viz_type != 'ec3_map'&&!('xAxis' in chart_options)){
+      if (fd.viz_type != 'ec3_map' && !('xAxis' in chart_options)){
         chart_options.xAxis = [{type: 'category'}];
       }
-      if (fd.viz_type != 'ec3_map'&&!('yAxis' in chart_options)){
+      if (fd.viz_type != 'ec3_map' && !('yAxis' in chart_options)){
         chart_options.yAxis = [{type: 'value'}];
       }
-
     }
     //add data to echart_options
     let legend_data = [];
     let xaxis_data = [];
+    let option_series = [];
 
-    let dimension = "";
+    // let dimension = "";
     //TODO support multi dimension
-    if ('dimensions' in fd && fd.dimensions != null && fd.dimensions.length > 0) {
-      dimension = fd.dimensions[0];
+    // if ('dimensions' in fd && fd.dimensions != null && fd.dimensions.length > 0) {
+    //   dimension = fd.dimensions[0];
+    // }
+    const column_mapping = payload.data.column_mapping;
+    const metrics = fd.metrics.map((m) => {
+      if (m in column_mapping) {
+        return column_mapping[m];
+      } else {
+        return m;
+      }
+    });
+
+    let x_col = fd.aiec3_x_col;
+    if (fd.aiec3_x_col in column_mapping){
+      x_col = column_mapping[fd.aiec3_x_col];
     }
 
-    let metrics = fd.metrics;
+    let legend_col = fd.aiec3_legend_col;
+    if (fd.aiec3_legend_col in column_mapping) {
+      legend_col = column_mapping[fd.aiec3_legend_col]
+    }
+
+    const order_by_cols = fd.order_by_cols;
+    
+    let wind_direction_col = column_mapping[fd.ec3_wind_direction_col];
+    if (fd.ec3_wind_direction_col in column_mapping) {
+      wind_direction_col = column_mapping[fd.ec3_wind_direction_col]
+    }
 
     //init data
     payload.data.records.forEach((d) => {
       // legend_data.push(d[dimension]);
-      xaxis_data.push(d[dimension]);
+      xaxis_data.push(d[x_col]);
     });
+    xaxis_data = uniqueArray(xaxis_data);
 
     //get default_serie
-    let default_serie = {};
-    if (chart_options.series.length == 1) {
-      Object.assign(default_serie, chart_options.series[0]) 
-    }
+    // let default_serie = {};
+    // if (chart_options.series.length == 1) {
+    //   Object.assign(default_serie, chart_options.series[0]) 
+    // }
     //init series data
-    if (chart_options.series.length <= 1) {
+    // if (chart_options.series.length <= 1) {
+    if (legend_col == null || legend_col == '') {
       for (let i = 0; i < metrics.length; i++) {
         let metric = metrics[i];
         // if there is only one serie
-        let serie = Object.assign({}, default_serie);
-        if (!('name' in serie)) {
-          serie.name = metric;
+        let default_serie = {};
+        if (chart_options.series.length == 1) {
+          Object.assign(default_serie, chart_options.series[0]) 
+        } else {
+          Object.assign(default_serie, chart_options.series[i]) 
         }
+
+        let serie = Object.assign({}, default_serie);
+        serie.name = metric;
         // add legend
         legend_data.push(metric);
 
+        //init seria data
         let serie_data = []
         payload.data.records.forEach((d) => {
-          let name = d[dimension];
+          let name = d[x_col];
           let value = d[metric];
           let _item = {
             name,
             value
           };
-
           // add wind direction
-          if (fd.ec3_wind_direction != null && fd.ec3_wind_direction != '') {
+          if (wind_direction_col != null && wind_direction_col != '') {
             _item['symbol'] = 'arrow';
-            _item['symbolRotate'] = getSymbolRotate(d[fd.ec3_wind_direction]);
+            _item['symbolRotate'] = getSymbolRotate(d[wind_direction_col]);
           }
 
           serie_data.push(_item);
         });
 
-        serie.data = serie_data
-        chart_options.series[i] = serie;
+        serie.data = serie_data;
+        option_series.push(serie);
+        // chart_options.series[i] = serie;
       }
     } else {
-      // when series length larger than one
-      for (let i = 0; i < chart_options.series.length; i++) {
-        let metric = metrics[i]
-        let serie_data = [];
+      console.log('payload.data.legends' + payload.data.legends);
+      legend_data = payload.data.legends;
+      const metric = metrics[0];
 
-        legend_data.push(metric);
-
-        if (!('name' in chart_options.series[i])) {
-          chart_options.series[i].name = metric;
+      for (let i = 0; i < legend_data.length; i++) {
+        let legend = legend_data[i];
+        let default_serie = {};
+        if (chart_options.series.length == 1) {
+          Object.assign(default_serie, chart_options.series[0]) 
+        } else {
+          Object.assign(default_serie, chart_options.series[i]) 
         }
-        //if chart_options.series have not set the data
-        if (!('data' in chart_options.series[i] && chart_options.series[i].data.length > 0)) {
-          payload.data.records.forEach((d) => {
-            const name = d[dimension];
-            const value = d[metric];
+
+        let serie = Object.assign({}, default_serie);
+        serie.name = legend;
+
+        //init seria data
+        let serie_data = [];
+        payload.data.records.forEach((d) => {
+          if (d[legend_col] == legend) {
+            let name = d[x_col];
+            let value = d[metric];
             let _item = {
               name,
               value
             };
+
             // add wind direction
-            if (fd.ec3_wind_direction != null && fd.ec3_wind_direction != '') {
+            if (wind_direction_col != null && wind_direction_col != '') {
               _item['symbol'] = 'arrow';
-              _item['symbolRotate'] = getSymbolRotate(d[fd.ec3_wind_direction]);
+              _item['symbolRotate'] = getSymbolRotate(d[wind_direction_col]);
             }
             serie_data.push(_item);
-          });
-          chart_options.series[i].data = serie_data;
-        }
-      };
-    }
-
-    if ('legend' in chart_options) {
-      if (!('data' in chart_options.legend && chart_options.legend.data.length > 0)) {
-        chart_options.legend.data = legend_data;
+          }
+        });
+        serie.data = serie_data;
+        option_series.push(serie);
+        // chart_options.series[i] = serie;
       }
     }
+    
+    chart_options.series = option_series;
+
+    if (!('legend' in chart_options)) {
+      chart_options.legend = {};
+    }
+    chart_options.legend.data = legend_data;
+
+    if (!('tooltip' in chart_options)){
+      let tooltip = {};
+      tooltip.trigger = 'axis';
+      chart_options.tooltip = tooltip;
+    }
+       
+    // if (!('data' in chart_options.legend && chart_options.legend.data.length > 0)) {
+    //     chart_options.legend.data = legend_data;
+    //   }
 
     if ('xAxis' in chart_options) {
       //TODO consider more than one

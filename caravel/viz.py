@@ -1998,13 +1998,16 @@ class Ec3Viz(BaseViz):
         'label': _("数据查询参数"),
         'description': _('数据查询相关参数'),
         'fields': (
-            'is_groupby', 'dimensions', 'metrics', 'order_by_cols', 'ec3_wind_direction',
+            ('aiec3_x_col', 'aiec3_legend_col',),
+            'metrics',
+            ('order_by_cols', '',),
         )
     }, {
         'label': _("Echart Options参数设置"),
         'description': _('Echart Options参数设置'),
         'fields': (
             'aiec3_options',
+            ('ec3_wind_direction_col', '',),
         )
     })
 
@@ -2012,6 +2015,8 @@ class Ec3Viz(BaseViz):
 
     form_overrides = ({
         'metrics': {
+            'label': '指标',
+            'describtion': '如果指定了图例字段，只能选一个指标',
             'default': [],
         },
     })
@@ -2024,16 +2029,16 @@ class Ec3Viz(BaseViz):
             all_order_by_choices.append((json.dumps([s, False]), s + ' [desc]'))
 
         self.form_overrides = ({
-            'metrics': ({
-                "label": _("Metrics"),
-                "choices": FormFactory.choicify(datasource.column_names) + datasource.metrics_combo,
-                "default": [],
-                "description": _("One or many metrics to display")
-            }),
+            # 'metrics': ({
+            #     "label": _("Metrics"),
+            #     "choices": FormFactory.choicify(datasource.column_names) + datasource.metrics_combo,
+            #     "default": [],
+            #     "description": _("One or many metrics to display")
+            # }),
             'order_by_cols': ({
-                "label": _("Ordering"),
+                "label": _("排序字段"),
                 "choices": all_order_by_choices,
-                "description": _("One or many metrics to display")
+                "description": _("选择一个或者多个字段进行排序")
             }),
         })
         super(Ec3Viz, self).__init__(datasource, form_data, slice_)
@@ -2042,19 +2047,26 @@ class Ec3Viz(BaseViz):
     def query_obj(self):
         d = super(Ec3Viz, self).query_obj()
         fd = self.form_data
-        # if fd.get('is_groupby') and not fd.get('metrics') <= [c[1] for c in self.datasource.metrics_combo]:
-            # flasher("Group By查询必须选择聚合字段作为度量指标，如:max_,min_,sum_开头字段", "danger")
-        if fd.get('is_groupby'):
-            d['groupby'] = fd.get('dimensions')
-        else:
-            d['columns'] = (fd.get('dimensions') if fd.get('dimensions') else []) +\
-             (fd.get('metrics') if fd.get('metrics') else []) +\
-             (fd.get('ec3_wind_direction') if fd.get('ec3_wind_direction') else [])
+        x_col = fd.get('aiec3_x_col')
+        legend_col = fd.get('aiec3_legend_col')
+        metrics = fd.get('metrics', [])
+        order_by_cols = fd.get('order_by_cols', [])
+        wind_direction_col = fd.get('ec3_wind_direction_col')
+        self.used_columns = [x_col] + ([legend_col] if legend_col else []) \
+                + metrics + ([wind_direction_col] if wind_direction_col else [])
 
-            d['metrics'] = []
+        if not x_col:
+            raise Exception("[X轴字段] 不能为空")
 
-        if fd.get('order_by_cols', []):
-            d['orderby'] = [json.loads(t) for t in fd.get('order_by_cols', [])]
+        if not metrics:
+            raise Exception("[指标字段] 不能为空")
+
+        d['groupby'] = [ x_col ] + ([legend_col] if legend_col else [])
+        if wind_direction_col:
+            d['groupby'] += [ wind_direction_col ]
+
+        if order_by_cols:
+            d['orderby'] = [json.loads(t) for t in order_by_cols]
 
         return d
 
@@ -2068,9 +2080,28 @@ class Ec3Viz(BaseViz):
 
     def get_data(self):
         df = self.get_df()
+        # get legend data
+        fd = self.form_data
+        legends = []
+
+        metrics = [(c.metric_name, (c.verbose_name if c.verbose_name else c.metric_name)) \
+        for c in self.datasource.metrics \
+                if c.metric_name in self.used_columns]
+        columns = [(c.column_name, (c.verbose_name if c.verbose_name else c.column_name)) for c in self.datasource.columns \
+                if c.column_name in self.used_columns]
+
+        if fd.get('aiec3_legend_col'):
+            query_obj = super(Ec3Viz, self).query_obj()
+            query_obj['groupby'] = [fd.get('aiec3_legend_col')]
+            query_obj['metrics'] = ['count']
+            legend_data = self.datasource.query(**query_obj)
+            legend_data_df = legend_data.df
+            legends = legend_data_df[fd.get('aiec3_legend_col')].tolist() or []
         return dict(
-            records=df.to_dict(orient="records"),
-            columns=list(df.columns),
+            records = df.to_dict(orient="records"),
+            columns = list(df.columns),
+            column_mapping = dict(columns + metrics),
+            legends = legends,
         )
 
     def json_dumps(self, obj):

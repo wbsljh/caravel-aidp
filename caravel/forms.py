@@ -1097,9 +1097,11 @@ class FormFactory(object):
                 "default": 5,
                 "description": "定时刷新频率， 单位（秒）"
             }),
-            'ec3_wind_direction': (SelectMultipleSortableField, {
+            'ec3_wind_direction_col': (SelectField, {
                 "label": _("风向标"),
-                "choices": self.choicify(datasource.column_names),
+                "default": '',
+                "validators": [validators.Optional()],
+                "choices": [('', '不填')] + self.choicify(datasource.column_names),
                 "description": _("选择一个字段作为风向标, 风向标字段的值范围必须是：(e 东，s南, w 西, n 北, es 东南, en 东北, ws 西南, wn 西北)")
             }),
             'aiec3_map_connected': (BetterBooleanField, {
@@ -1121,6 +1123,19 @@ class FormFactory(object):
                 "label": _('connect field'),
                 "default": '',
                 "description": "connect field",
+            }),
+            'aiec3_x_col': (SelectField, {
+                "label": _("X轴字段"),
+                "default": '',
+                "choices": self.choicify(datasource.groupby_column_names),
+                "description": _("必填项， 选择一个字段作为X轴数据")
+            }),
+            'aiec3_legend_col': (SelectField, {
+                "label": _("图例字段"),
+                "default": '',
+                "validators": [validators.Optional()],
+                "choices": [('', '不填')] + self.choicify(datasource.groupby_column_names),
+                "description": _("非必填，当未指定时，以指标作为图例")
             }),
         }
 

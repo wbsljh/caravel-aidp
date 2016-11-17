@@ -913,12 +913,18 @@ class SqlaTable(Model, Queryable, AuditMixinNullable):
         else:
             qry = qry.where(and_(*where_clause_and))
         qry = qry.having(and_(*having_clause_and))
-        if groupby:
-            qry = qry.order_by(desc(main_metric_expr))
-        elif orderby:
+        # if groupby:
+        #     qry = qry.order_by(desc(main_metric_expr))
+        # elif orderby:
+        #     for col, ascending in orderby:
+        #         direction = asc if ascending else desc
+        #         qry = qry.order_by(direction(col))
+        if orderby:
             for col, ascending in orderby:
                 direction = asc if ascending else desc
                 qry = qry.order_by(direction(col))
+        elif groupby:
+            qry = qry.order_by(desc(main_metric_expr))
 
         qry = qry.limit(row_limit)
 
@@ -1074,6 +1080,9 @@ class SqlMetric(Model, AuditMixinNullable):
     @property
     def sqla_col(self):
         name = self.metric_name
+        # add by aidp
+        if self.verbose_name:
+            name = self.verbose_name
         return literal_column(self.expression).label(name)
 
     @property
@@ -1131,6 +1140,9 @@ class TableColumn(Model, AuditMixinNullable):
     @property
     def sqla_col(self):
         name = self.column_name
+        # add by aidp
+        if self.verbose_name:
+            name = self.verbose_name
         if not self.expression:
             col = column(self.column_name).label(name)
         else:
@@ -2123,4 +2135,5 @@ class Resource(Model):
 
     @property
     def url(self):
-        return url_for('ResourceModelView.download', filename=str(self.file), _external = True)
+        #return url_for('ResourceModelView.download', filename=str(self.file), _external = True)
+        return '{0}/{1}'.format('{{RES_PATH}}', str(self.file))
