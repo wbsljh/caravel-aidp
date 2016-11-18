@@ -1127,7 +1127,8 @@ class FormFactory(object):
             'aiec3_x_col': (SelectField, {
                 "label": _("X轴字段"),
                 "default": '',
-                "choices": self.choicify(datasource.groupby_column_names),
+                "validators": [validators.Optional()],
+                "choices": [('', '不填')] + self.choicify(datasource.groupby_column_names),
                 "description": _("必填项， 选择一个字段作为X轴数据")
             }),
             'aiec3_legend_col': (SelectField, {

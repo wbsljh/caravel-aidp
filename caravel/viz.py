@@ -2000,7 +2000,7 @@ class Ec3Viz(BaseViz):
         'fields': (
             ('aiec3_x_col', 'aiec3_legend_col',),
             'metrics',
-            ('order_by_cols', '',),
+            'order_by_cols',
         )
     }, {
         'label': _("Echart Options参数设置"),
@@ -2052,16 +2052,17 @@ class Ec3Viz(BaseViz):
         metrics = fd.get('metrics', [])
         order_by_cols = fd.get('order_by_cols', [])
         wind_direction_col = fd.get('ec3_wind_direction_col')
-        self.used_columns = [x_col] + ([legend_col] if legend_col else []) \
+        self.used_columns = ([x_col] if x_col else []) + \
+                ([legend_col] if legend_col else []) \
                 + metrics + ([wind_direction_col] if wind_direction_col else [])
 
-        if not x_col:
-            raise Exception("[X轴字段] 不能为空")
+        #if not x_col:
+        #    raise Exception("[X轴字段] 不能为空")
 
         if not metrics:
             raise Exception("[指标字段] 不能为空")
 
-        d['groupby'] = [ x_col ] + ([legend_col] if legend_col else [])
+        d['groupby'] = ([ x_col ] if x_col else []) + ([legend_col] if legend_col else [])
         if wind_direction_col:
             d['groupby'] += [ wind_direction_col ]
 
@@ -2145,7 +2146,11 @@ class Ec3MapViz(Ec3Viz):
     fieldsets = ({
         'label': _("数据查询参数"),
         'description': _('数据查询相关参数'),
-        'fields': ('is_groupby', 'dimensions', 'metrics', 'order_by_cols')
+        'fields': (
+            ('aiec3_x_col', 'aiec3_legend_col',),
+            'metrics',
+            'order_by_cols',
+        )
     }, {
         'label': _("Echart Options参数设置"),
         'description': _('Echart Options参数设置'),
