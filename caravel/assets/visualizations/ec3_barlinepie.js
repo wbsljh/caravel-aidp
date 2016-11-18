@@ -291,9 +291,9 @@ function Ec3BarLineWidget(slice) {
     //   }
 
     if (xaxis_data != null && xaxis_data.length > 0) {
-      if (chart_options.xAxis[0].type == 'category') {
+      if (chart_options.xAxis&&chart_options.xAxis[0].type == 'category') {
         chart_options.xAxis[0].data = xaxis_data;
-      } else if (chart_options.yAxis[0].type == 'category') {
+      } else if (chart_options.yAxis&&chart_options.yAxis[0].type == 'category') {
         chart_options.yAxis[0].data = xaxis_data;
       }
     }
