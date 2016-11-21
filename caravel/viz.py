@@ -219,12 +219,16 @@ class BaseViz(object):
             return filters
 
         # Extra filters (coming from dashboard)
+        selfflt = filters;
         for col, vals in self.get_extra_filters().items():
             if not (col and vals):
                 continue
             elif col in self.datasource.filterable_column_names:
                 # Quote values with comma to avoid conflict
                 vals = ["'{}'".format(x) if "," in x else x for x in vals]
+                for flt in selfflt:
+                    if (flt[0]==col):
+                        filters.remove(flt)
                 filters += [(col, 'in', ",".join(vals))]
         return filters
 

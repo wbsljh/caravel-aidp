@@ -7,13 +7,11 @@ function Ec3MapWidget(slice) {
     //TODO is and extraFilters False?
     $.getJSON(slice.jsonEndpoint({ extraFilters: false }), function(payload) {
         const fd = payload.form_data;
-        const selected_areas = JSON.parse(fd.aiec3_map_default_area);
+        const selected_areas = fd.aiec3_map_default_area?JSON.parse(fd.aiec3_map_default_area):[];
         let chart_options = ec3barline(slice).getOptions(payload);
         chart_options.series.map((elem)=>{
-          debugger;
           console.log('in map'+elem);
           elem.data.map((dItem)=>{
-            debugger;
             if($.inArray(dItem.name, selected_areas)>=0){
               dItem.selected=true;
             }
