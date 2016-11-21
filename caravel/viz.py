@@ -219,12 +219,16 @@ class BaseViz(object):
             return filters
 
         # Extra filters (coming from dashboard)
+        selfflt = filters;
         for col, vals in self.get_extra_filters().items():
             if not (col and vals):
                 continue
             elif col in self.datasource.filterable_column_names:
                 # Quote values with comma to avoid conflict
                 vals = ["'{}'".format(x) if "," in x else x for x in vals]
+                for flt in selfflt:
+                    if (flt[0]==col):
+                        filters.remove(flt)
                 filters += [(col, 'in', ",".join(vals))]
         return filters
 
@@ -2156,7 +2160,7 @@ class Ec3MapViz(Ec3Viz):
         'label': _("Echart Options参数设置"),
         'description': _('Echart Options参数设置'),
         'fields': (
-            'aiec3_map_type', 'aiec3_map_type_name', 'aiec3_map_file',
+            'aiec3_map_type', 'aiec3_map_type_name', 'aiec3_map_file','aiec3_map_default_area',
             ('aiec3_map_connected', 'aiec3_map_interval',),
             'aiec3_map_connect_field',
             'aiec3_options',

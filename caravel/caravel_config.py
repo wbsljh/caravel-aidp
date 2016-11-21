@@ -22,8 +22,8 @@ SECRET_KEY = '\2\1thisismyscretkey\1\2\e\y\y\h'
 # you want to explore are managed directly in the web UI
 #SQLALCHEMY_DATABASE_URI = 'sqlite:////tmp/caravel.db'
 #SQLALCHEMY_DATABASE_URI = 'mysql://root:password@localhost/caravel?charset=utf8'
-SQLALCHEMY_DATABASE_URI = 'mysql://root:root123@192.168.0.40/caravel'
-#SQLALCHEMY_DATABASE_URI = 'mysql://root:root@localhost/caravel'
+#SQLALCHEMY_DATABASE_URI = 'mysql://root:root123@192.168.0.40/caravel'
+SQLALCHEMY_DATABASE_URI = 'mysql://root:root@localhost/caravel'
 
 # Flask-WTF flag for CSRF
 CSRF_ENABLED = True

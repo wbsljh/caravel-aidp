@@ -1000,6 +1000,11 @@ class FormFactory(object):
                 "default": "",
                 "description": _("full path of SVG/JSON resourse file(including file name)")
             }),
+            'aiec3_map_default_area': (TextField, {
+                "label": _("Default Area"),
+                "default": "",
+                "description": _("fill in the areaName in the Map, default choosed Area will be highlighted!")
+            }),
             'dimensions': (SelectMultipleSortableField, {
                 "label": _("维度"),
                 "choices": self.choicify(datasource.groupby_column_names),
@@ -1070,7 +1075,7 @@ class FormFactory(object):
                 "default":0
             }),
             'aiswpier_interval': (IntegerField, {
-                "label": _("slide interval(ms)"),
+                "label": _("slide interval(s)"),
                 "description": _(
                     "set this field will cause the slide auto-play according to the defined interval"),
                 "default":0

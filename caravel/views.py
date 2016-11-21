@@ -1137,7 +1137,6 @@ class Caravel(BaseCaravelView):
                 datasource_type, datasource_id, datasource.name))
 
         request_args_multi_dict = request.args  # MultiDict
-
         slice_id = slice_id or request_args_multi_dict.get("slice_id")
         slc = None
         # build viz_obj and get it's params
@@ -1619,7 +1618,6 @@ class Caravel(BaseCaravelView):
 
         #
         url_params_multidict = request.args  # MultiDict
-
         session = db.session()
         qry = session.query(models.Dashboard)
         if dashboard_id.isdigit():
