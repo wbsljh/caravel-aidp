@@ -2005,6 +2005,7 @@ class Ec3Viz(BaseViz):
             ('aiec3_x_col', 'aiec3_legend_col',),
             'metrics',
             'order_by_cols',
+            'row_limit',
         )
     }, {
         'label': _("Echart Options参数设置"),

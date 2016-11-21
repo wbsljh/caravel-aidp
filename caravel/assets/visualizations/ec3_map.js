@@ -9,7 +9,7 @@ function Ec3MapWidget(slice) {
         const fd = payload.form_data;
         const selected_areas = fd.aiec3_map_default_area?JSON.parse(fd.aiec3_map_default_area):[];
         let chart_options = ec3barline(slice).getOptions(payload);
-        if(chart_options.series[0].data||chart_options.series[0].data.length==0){
+        if(!chart_options.series[0].data||chart_options.series[0].data.length==0){
           chart_options.series[0].data=[];
           selected_areas.map((iName)=>{
             let aData = {};
