@@ -89,7 +89,7 @@ function Ec3BarLineWidget(slice) {
     // records, x_col, metric_col, legend_col, legend, wind_direction_col
     let serie_data = [];
     params.records.forEach((d) => {
-      if (params.legend_col == null || (params.legend_col != null && d[params.legend_col] == params.legend)) {
+      if (params.x_col&&(params.legend_col == null || (params.legend_col != null && d[params.legend_col] == params.legend))) {
         let name = d[params.x_col];
         let value = d[params.metric_col];
         let _item = {
@@ -221,6 +221,7 @@ function Ec3BarLineWidget(slice) {
         option_series.push(serie);
         // chart_options.series[i] = serie;
       }
+      
     } else {
       console.log('payload.data.legends' + payload.data.legends);
       legend_data = payload.data.legends;

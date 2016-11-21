@@ -9,14 +9,24 @@ function Ec3MapWidget(slice) {
         const fd = payload.form_data;
         const selected_areas = fd.aiec3_map_default_area?JSON.parse(fd.aiec3_map_default_area):[];
         let chart_options = ec3barline(slice).getOptions(payload);
-        chart_options.series.map((elem)=>{
-          console.log('in map'+elem);
-          elem.data.map((dItem)=>{
-            if($.inArray(dItem.name, selected_areas)>=0){
-              dItem.selected=true;
-            }
+        if(chart_options.series[0].data||chart_options.series[0].data.length==0){
+          chart_options.series[0].data=[];
+          selected_areas.map((iName)=>{
+            let aData = {};
+            aData.name = iName;
+            aData.selected = true;
+            chart_options.series[0].data.push(aData);
+          });
+        }else{
+          chart_options.series.map((elem)=>{
+            elem.data.map((dItem)=>{
+              if($.inArray(dItem.name, selected_areas)>=0){
+                dItem.selected=true;
+              }
+            })
           })
-        })
+        }
+        
         //regist the custom map type
         var ec3_map_type = fd.aiec3_map_type||'svg';
         var ec3_map_name = fd.aiec3_map_type_name||'customMapName';
