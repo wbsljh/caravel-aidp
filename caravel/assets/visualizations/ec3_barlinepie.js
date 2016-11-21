@@ -3,57 +3,55 @@ const echarts = require('echarts');
 
 function Ec3BarLineWidget(slice) {
 
-  function getDefaultOptions(vizType) {
+  function getDefaultOptions(vizType, options) {
     let chart_options = {};
+    if (options) {
+      chart_options = eval('(' + options + ')');
+    }
     switch (vizType) {
       case 'ec3_bar':
-        chart_options = {
-          xAxis: [{
-            type: 'category'
-          }],
-          yAxis: [{
-            type: 'value'
-          }],
-          series: [{
+        if (!chart_options.xAxis){
+          chart_options.xAxis = [{type: 'category'}];
+        }
+        if (!chart_options.yAxis){
+          chart_options.yAxis = [{type: 'value'}];
+        }
+        if (!chart_options.series){
+          chart_options.series = [{
             type: 'bar'
           }]
-        };
+        }
         break;
       case 'ec3_line':
-        chart_options = {
-          xAxis: [{
-            type: 'category'
-          }],
-          yAxis: [{
-            type: 'value'
-          }],
-          series: [{
+        if (!chart_options.xAxis){
+          chart_options.xAxis = [{type: 'category'}];
+        }
+        if (!chart_options.yAxis){
+          chart_options.yAxis = [{type: 'value'}];
+        }
+        if (!chart_options.series){
+          chart_options.series = [{
             type: 'line'
-          }]
-        };
+          }];
+        }
         break;
       case 'ec3_pie':
-        chart_options = {
-          legend: {},
-          series: [{
+        if (!chart_options.series) {
+          chart_options.series = [{
             type: 'pie'
-          }]
-        };
+          }];
+        }
+        if (!chart_options.legend) {
+          chart_options.legend = {};
+        }
         break;
       case 'ec3_map':
-        chart_options = {
-          xAxis: [{
-            type: 'category'
-          }],
-          yAxis: [{
-            type: 'value'
-          }],
-          series: [{
-            type: 'bar'
-          }]
-        };
+        if (!chart_options.series) {
+          chart_options.series = [{
+            type: 'map'
+          }];
+        }
         break;
-
     }
     return chart_options;
   }
@@ -88,9 +86,24 @@ function Ec3BarLineWidget(slice) {
     //init seria data
     // records, x_col, metric_col, legend_col, legend, wind_direction_col
     let serie_data = [];
-    params.records.forEach((d) => {
-      if (params.x_col&&(params.legend_col == null || (params.legend_col != null && d[params.legend_col] == params.legend))) {
-        let name = d[params.x_col];
+    if (!params.x_col && !params.legend_col) {
+        return serie_data;
+    } else {
+      params.records.forEach((d) => {
+      // if (!params.legend_col || 
+        // (params.legend_col && params.legend && d[params.legend_col] == params.legend)) {
+        
+        if (params.legend_col && params.legend && d[params.legend_col] != params.legend){
+          return;
+        }
+
+        let name = "";
+        if (params.x_col) {
+          name = d[params.x_col];
+        } else if (params.legend_col) {
+          name = d[params.legend_col];
+        }
+        
         let value = d[params.metric_col];
         let _item = {
           name,
@@ -103,26 +116,29 @@ function Ec3BarLineWidget(slice) {
           _item['symbolRotate'] = getSymbolRotate(d[params.wind_direction_col]);
         }
         serie_data.push(_item);
-      }
+      // }
     });
+    }
+    
     return serie_data;
   }
 
   function getOptions(payload) {
     // get init echart_options
     let fd = payload.form_data;
-    let chart_options = {};
-    if (fd.aiec3_options == '') {
-      chart_options = getDefaultOptions(fd.viz_type);
-    } else {
-      chart_options = eval('(' + fd.aiec3_options + ')');
-      if (fd.viz_type != 'ec3_map' && !('xAxis' in chart_options)){
-        chart_options.xAxis = [{type: 'category'}];
-      }
-      if (fd.viz_type != 'ec3_map' && !('yAxis' in chart_options)){
-        chart_options.yAxis = [{type: 'value'}];
-      }
-    }
+    // let chart_options = {};
+    let chart_options = getDefaultOptions(fd.viz_type, fd.aiec3_options);
+    // if (fd.aiec3_options == '') {
+    //   chart_options = getDefaultOptions(fd.viz_type);
+    // } else {
+    //   chart_options = eval('(' + fd.aiec3_options + ')');
+    //   if (fd.viz_type != 'ec3_map' && !('xAxis' in chart_options)){
+    //     chart_options.xAxis = [{type: 'category'}];
+    //   }
+    //   if (fd.viz_type != 'ec3_map' && !('yAxis' in chart_options)){
+    //     chart_options.yAxis = [{type: 'value'}];
+    //   }
+    // }
     //add data to echart_options
     let legend_data = [];
     let xaxis_data = [];
@@ -175,7 +191,7 @@ function Ec3BarLineWidget(slice) {
     // }
     //init series data
     // if (chart_options.series.length <= 1) {
-    if (legend_col == null || legend_col == '') {
+    if (!legend_col) {
       for (let i = 0; i < metrics.length; i++) {
         let metric = metrics[i];
         // if there is only one serie
@@ -223,55 +239,56 @@ function Ec3BarLineWidget(slice) {
       }
       
     } else {
-      console.log('payload.data.legends' + payload.data.legends);
+      console.log('process option series with legend col: ' + payload.data.legends);
       legend_data = payload.data.legends;
       const metric = metrics[0];
 
-      for (let i = 0; i < legend_data.length; i++) {
-        let legend = legend_data[i];
-        let default_serie = {};
-        if (chart_options.series.length == 1) {
+      //TODO consider when the viz_type is pie
+      if (fd.viz_type == 'ec3_pie') {
+          let default_serie = {};
           Object.assign(default_serie, chart_options.series[0]) 
-        } else {
-          Object.assign(default_serie, chart_options.series[i]) 
+          let serie = Object.assign({}, default_serie);
+          serie.name = x_col;
+          let serie_data = getSerieData({
+            "records": payload.data.records,
+            "x_col": x_col,
+            "metric_col": metric,
+            "legend_col": legend_col,
+            "legend": null,
+            "wind_direction_col": wind_direction_col
+          });
+          serie.data = serie_data;
+          option_series.push(serie);
+
+      } else {
+        for (let i = 0; i < legend_data.length; i++) {
+          let legend = legend_data[i];
+          let default_serie = {};
+          if (chart_options.series.length == 1) {
+            Object.assign(default_serie, chart_options.series[0]) 
+          } else {
+            Object.assign(default_serie, chart_options.series[i]) 
+          }
+
+          let serie = Object.assign({}, default_serie);
+          serie.name = legend;
+
+          let serie_data = getSerieData({
+            "records": payload.data.records,
+            "x_col": x_col,
+            "metric_col": metric,
+            "legend_col": legend_col,
+            "legend": legend,
+            "wind_direction_col": wind_direction_col
+          });
+
+          serie.data = serie_data;
+          option_series.push(serie);
+          // chart_options.series[i] = serie;
         }
 
-        let serie = Object.assign({}, default_serie);
-        serie.name = legend;
-
-        //init seria data
-        // let serie_data = [];
-        // payload.data.records.forEach((d) => {
-        //   if (d[legend_col] == legend) {
-        //     let name = d[x_col];
-        //     let value = d[metric];
-        //     let _item = {
-        //       name,
-        //       value
-        //     };
-
-        //     // add wind direction
-        //     if (wind_direction_col != null && wind_direction_col != '') {
-        //       _item['symbol'] = 'arrow';
-        //       _item['symbolRotate'] = getSymbolRotate(d[wind_direction_col]);
-        //     }
-        //     serie_data.push(_item);
-        //   }
-        // });
-
-        let serie_data = getSerieData({
-          "records": payload.data.records,
-          "x_col": x_col,
-          "metric_col": metric,
-          "legend_col": legend_col,
-          "legend": legend,
-          "wind_direction_col": wind_direction_col
-        });
-
-        serie.data = serie_data;
-        option_series.push(serie);
-        // chart_options.series[i] = serie;
       }
+      
     }
     
     chart_options.series = option_series;
