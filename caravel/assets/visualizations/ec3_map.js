@@ -7,7 +7,18 @@ function Ec3MapWidget(slice) {
     //TODO is and extraFilters False?
     $.getJSON(slice.jsonEndpoint({ extraFilters: false }), function(payload) {
         const fd = payload.form_data;
-        let chart_options = ec3barline(slice).getOptions(payload)
+        const selected_areas = JSON.parse(fd.aiec3_map_default_area);
+        let chart_options = ec3barline(slice).getOptions(payload);
+        chart_options.series.map((elem)=>{
+          debugger;
+          console.log('in map'+elem);
+          elem.data.map((dItem)=>{
+            debugger;
+            if($.inArray(dItem.name, selected_areas)>=0){
+              dItem.selected=true;
+            }
+          })
+        })
         //regist the custom map type
         var ec3_map_type = fd.aiec3_map_type||'svg';
         var ec3_map_name = fd.aiec3_map_type_name||'customMapName';
