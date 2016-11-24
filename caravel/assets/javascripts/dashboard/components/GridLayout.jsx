@@ -87,7 +87,8 @@ class GridLayout extends React.Component {
         layouts={{ lg: this.state.layout }}
         onResizeStop={this.onResizeStop.bind(this)}
         onDragStop={this.onDragStop.bind(this)}
-        cols={{ lg: 48, md: 24, sm: 10, xs: 8, xxs: 6 }}
+        cols={{ lg: 48, md: 48, sm: 48, xs: 48, xxs: 48 }}
+        // cols={{ lg: 48, md: 24, sm: 10, xs: 8, xxs: 6 }}
         rowHeight={5}
         autoSize
         margin={[0, 0]}

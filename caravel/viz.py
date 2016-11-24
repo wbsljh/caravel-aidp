@@ -2012,7 +2012,7 @@ class Ec3Viz(BaseViz):
         'description': _('Echart Options参数设置'),
         'fields': (
             'aiec3_options',
-            ('ec3_wind_direction_col', '',),
+            ('ec3_wind_direction_col', 'aiec3_legend_interval',),
         )
     })
 
@@ -2088,7 +2088,7 @@ class Ec3Viz(BaseViz):
         df = self.get_df()
         # get legend data
         fd = self.form_data
-        legends = []
+        # legends = []
 
         metrics = [(c.metric_name, (c.verbose_name if c.verbose_name else c.metric_name)) \
         for c in self.datasource.metrics \
@@ -2096,18 +2096,18 @@ class Ec3Viz(BaseViz):
         columns = [(c.column_name, (c.verbose_name if c.verbose_name else c.column_name)) for c in self.datasource.columns \
                 if c.column_name in self.used_columns]
 
-        if fd.get('aiec3_legend_col'):
-            query_obj = super(Ec3Viz, self).query_obj()
-            query_obj['groupby'] = [fd.get('aiec3_legend_col')]
-            query_obj['metrics'] = ['count']
-            legend_data = self.datasource.query(**query_obj)
-            legend_data_df = legend_data.df
-            legends = legend_data_df[fd.get('aiec3_legend_col')].tolist() or []
+        # if fd.get('aiec3_legend_col'):
+        #     query_obj = super(Ec3Viz, self).query_obj()
+        #     query_obj['groupby'] = [fd.get('aiec3_legend_col')]
+        #     query_obj['metrics'] = ['count']
+        #     legend_data = self.datasource.query(**query_obj)
+        #     legend_data_df = legend_data.df
+        #     legends = legend_data_df[fd.get('aiec3_legend_col')].tolist() or []
         return dict(
             records = df.to_dict(orient="records"),
             columns = list(df.columns),
             column_mapping = dict(columns + metrics),
-            legends = legends,
+            # legends = legends,
         )
 
     def json_dumps(self, obj):
@@ -2208,12 +2208,12 @@ class AiMarkupViz(TableViz):
     def __init__(self, datasource, form_data, slice_=None):
         super(AiMarkupViz, self).__init__(datasource, form_data, slice_)
 
-    def get_data(self):
-        df = self.get_df()
-        return dict(
-            records=df.to_dict(orient="records"),
-            columns=list(df.columns),
-        )
+    # def get_data(self):
+    #     df = self.get_df()
+    #     return dict(
+    #         records=df.to_dict(orient="records"),
+    #         columns=list(df.columns),
+    #     )
 
     def rendered(self, context):
 
@@ -2228,14 +2228,22 @@ class AiMarkupViz(TableViz):
             return html
 
     def get_data(self):
-        df = self.get_df()
-        context = dict(
-            records=df.to_dict(orient="records"),
-            columns=list(df.columns),
-            RES_PATH=config.get('RES_PATH'),
-        )
-        if len(df) == 1:
-            context.update(df.iloc[0].to_dict())
+        fd = self.form_data
+        if fd.get('all_columns') or fd.get('groupby'):
+            df = self.get_df()
+            context = dict(
+                records=df.to_dict(orient="records"),
+                columns=list(df.columns),
+                RES_PATH=config.get('RES_PATH'),
+            )
+            if len(df) == 1:
+                context.update(df.iloc[0].to_dict())
+        else:
+            context = dict(
+                records=None,
+                columns=None,
+                RES_PATH=config.get('RES_PATH'),
+            )
         return dict(html=self.rendered(context))
 
 class AiTableViz(BaseViz):

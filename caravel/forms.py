@@ -1143,6 +1143,11 @@ class FormFactory(object):
                 "choices": [('', '不填')] + self.choicify(datasource.groupby_column_names),
                 "description": _("非必填，当未指定时，以指标作为图例")
             }),
+            'aiec3_legend_interval': (IntegerField, {
+                "label": _('legend interval'),
+                "default": 0,
+                "description": "loop legend interval",
+            }),
         }
 
         # Override default arguments with form overrides
