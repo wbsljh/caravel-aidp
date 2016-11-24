@@ -82,6 +82,16 @@ function Ec3BarLineWidget(slice) {
     return result;
   }
 
+  function getLegendData(params) {
+    // "records": payload.data.records,
+    //  "legend_col": legend_col,
+    let legend_data = [];
+    params.records.forEach((d) => {
+      legend_data.push(d[params.legend_col]);
+    })
+    return uniqueArray(legend_data);
+  }
+
   function getSerieData(params){
     //init seria data
     // records, x_col, metric_col, legend_col, legend, wind_direction_col
@@ -207,23 +217,6 @@ function Ec3BarLineWidget(slice) {
         // add legend
         legend_data.push(metric);
 
-        //init seria data
-        // let serie_data = []
-        // payload.data.records.forEach((d) => {
-        //   let name = d[x_col];
-        //   let value = d[metric];
-        //   let _item = {
-        //     name,
-        //     value
-        //   };
-        //   // add wind direction
-        //   if (wind_direction_col != null && wind_direction_col != '') {
-        //     _item['symbol'] = 'arrow';
-        //     _item['symbolRotate'] = getSymbolRotate(d[wind_direction_col]);
-        //   }
-
-        //   serie_data.push(_item);
-        // });
         let serie_data = getSerieData({
           "records": payload.data.records,
           "x_col": x_col,
@@ -239,8 +232,13 @@ function Ec3BarLineWidget(slice) {
       }
       
     } else {
-      console.log('process option series with legend col: ' + payload.data.legends);
-      legend_data = payload.data.legends;
+      console.log('process option series with legend col: ' + legend_col);
+      // legend_data = payload.data.legends;
+      legend_data = getLegendData({
+        "records": payload.data.records,
+        "legend_col": legend_col,
+      });
+
       const metric = metrics[0];
 
       //TODO consider when the viz_type is pie
@@ -293,12 +291,15 @@ function Ec3BarLineWidget(slice) {
     
     chart_options.series = option_series;
 
-    if (!('legend' in chart_options)) {
+    if (!chart_options.legend) {
       chart_options.legend = {};
     }
-    chart_options.legend.data = legend_data;
 
-    if (!('tooltip' in chart_options)){
+    if (legend_data && legend_data.length > 0) {
+      chart_options.legend.data = legend_data;
+    }
+
+    if (!chart_options.tooltip) {
       let tooltip = {};
       tooltip.trigger = 'axis';
       chart_options.tooltip = tooltip;
@@ -327,11 +328,38 @@ function Ec3BarLineWidget(slice) {
     return chart_options;
   }
 
+  function doLegendInterval(chart, chart_options, interval) {
+    let loop = 0;
+    setInterval(()=>{
+      let selectedObj = {}
+      for (let i = 0 ; i < chart_options.legend.data.length; i++) {
+        let legend_item = chart_options.legend.data[i];
+        if (loop == chart_options.legend.data.length){
+          selectedObj[legend_item] = true;
+        } else if (loop == i) {
+          selectedObj[legend_item] = true;
+        } else {
+          selectedObj[legend_item] = false;
+        }
+      }
+
+      chart_options.legend.selected = selectedObj;
+      chart.setOption(chart_options);
+      loop = loop < chart_options.legend.data.length ? loop+1 : 0;
+    }, interval*1000)
+
+  }
+
   function refresh() {
     $.getJSON(slice.jsonEndpoint(), function(payload) {
         let chart_options = getOptions(payload);
         let chart = echarts.init(document.getElementById(slice.containerId));
         chart.setOption(chart_options);
+        if (chart_options.legend && chart_options.legend.data 
+          && chart_options.legend.data.length > 0 && payload.form_data.aiec3_legend_interval 
+          && payload.form_data.aiec3_legend_interval > 0) {
+          doLegendInterval(chart, chart_options, payload.form_data.aiec3_legend_interval);
+        }
         slice.done(payload);
       })
       .fail(function(xhr) {
