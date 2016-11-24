@@ -60,6 +60,12 @@ function Ec3MapWidget(slice) {
         let c = 0;
         function showTip() {
           console.log('call showTip...');
+          if(c==0){
+            chart_options.series[0].data.map((item) => {
+              item.selected = false;
+            });
+            chart.setOption(chart_options);
+          }
           let areaName = chart_options.series[0].data[c].name;
           chart.component.tooltip.showTip({seriesIndex: 0, name: areaName});
           if (fd.aiec3_map_connected) {
