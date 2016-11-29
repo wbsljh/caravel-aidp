@@ -46,6 +46,8 @@ setup(
         'thrift-sasl>=0.2.1',
         'werkzeug==0.11.10',
         'Flask-CAS==1.0.0', # custom add
+        'MySQL-python>=1.2.3', # custom add
+        'uWSGI==2.0.14', # custom add
     ],
     extras_require={
         'cors': ['Flask-Cors>=2.0.0'],
