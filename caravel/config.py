@@ -239,7 +239,7 @@ SQLLAB_TIMEOUT = 30
 RES_PATH = 'http://192.168.0.36:8088/media'
 
 try:
-    from .caravel_config import *  # noqa
+    from caravel_config import *  # noqa
 except ImportError:
     pass
 
